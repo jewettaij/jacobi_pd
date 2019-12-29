@@ -1,0 +1,20 @@
+# helpful link:
+#https://stackoverflow.com/questions/27644586/how-to-set-up-travis-ci-with-multiple-languages
+
+
+matrix:
+  include:
+
+    - language: cpp
+      compiler: gcc
+      # (Optional? update to a relatively recent linux distro)
+      dist: xenial
+      #install:
+      #  - sudo apt-get install -qq cppcheck
+      #  - git clone https://github.com/kward/shunit2 shunit2
+      script:
+        - cd tests
+        - g++ -std=c++11 -I../include -I../lambda-lanczos/include/lambda_lanczos -o test_superpose3d test.cpp
+        #- cppcheck --quiet --error-exitcode=1
+        - ./test_superpose3d
+        - cd ../

@@ -1,4 +1,4 @@
-p[![Build Status](https://travis-ci.org/jewettaij/jacobi.svg?branch=master)](https://travis-ci.org/jewettaij/jacobi.svg?branch=master)
+[![Build Status](https://travis-ci.org/jewettaij/jacobi.svg?branch=master)](https://travis-ci.org/jewettaij/jacobi.svg?branch=master)
 [![License](https://upload.wikimedia.org/wikipedia/commons/f/f9/CC-Zero-badge.svg)]()
 [![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/jewettaij/jacobi)]()
 
@@ -25,6 +25,14 @@ and it only works on dense square real symmetric matrices.
 ## Development Status: *Planning (pre-alpha)*
 
 As of 2019-12-28, this code is not complete and does not compile.
+
+## Installation
+
+This is a header-only library.
+
+Copy the files in the [include/superpose3d.hpp](include) subdirectory,
+to a location in your
+[include path](https://www.rapidtables.com/code/linux/gcc/gcc-i.html).
 
 ## License
 
