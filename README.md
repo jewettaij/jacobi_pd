@@ -12,7 +12,7 @@ header-only C++ source code for the
 This remains one of the oldest and most popular algorithms for
 diagonalizing small, dense, square, real, symmetric matrices.
 The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
-vector<vector<X> >, fixed-size arrays,
+vector\<vector\<X\> \>, fixed-size arrays,
 or any other C++ object which supports double-indexing.
 (**X** is any real numeric type.  Complex numbers are not supported.)
 
@@ -30,7 +30,7 @@ As of 2019-12-28, this code is not complete and does not compile.
 
 This is a header-only library.
 
-Copy the files in the [include/superpose3d.hpp](include) subdirectory,
+Copy the files in the [include/jacobi.hpp](include) subdirectory,
 to a location in your
 [include path](https://www.rapidtables.com/code/linux/gcc/gcc-i.html).
 
