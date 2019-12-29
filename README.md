@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/jewettaij/jacobi.svg?branch=master)](https://travis-ci.org/jewettaij/jacobi.svg?branch=master)
-[![License](https://upload.wikimedia.org/wikipedia/commons/f/f9/CC-Zero-badge.svg)]()
+[![GitHub](https://img.shields.io/github/license/jewettaij/jacobi)](./LICENSE.md)
 [![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/jewettaij/jacobi)]()
 
 
