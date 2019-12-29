@@ -11,10 +11,14 @@ header-only C++ source code for the
 [Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
 This remains one of the oldest and most popular algorithms for
 diagonalizing small, dense, square, real, symmetric matrices.
+
 The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
 vector\<vector\<X\> \>, fixed-size arrays,
-or any other C++ object which supports double-indexing.
+or any other C or C++ object which supports double-indexing.
 (**X** is any real numeric type.  Complex numbers are not supported.)
+
+*(Memory allocation on the heap is avoided except during initialization.)*
+
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
