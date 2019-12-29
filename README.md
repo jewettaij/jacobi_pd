@@ -22,6 +22,7 @@ Amazingly, as of 2020-1-01, no public-domain C++ header code exists for matrix d
 contribute to some github projects.  So I wrote my own library.)
 This code has not been optimized, and does not run in parallel,
 and it only works on dense square real symmetric matrices.
+Use at your own risk.
 
 ## Development Status: *Planning (pre-alpha)*
 
@@ -38,6 +39,6 @@ to a location in your
 ## License
 
 *jacobi* is available under the terms of the [Creative-Commons-Zero](LICENSE.md).
-I only ask that you send me corrections (or suggestions) if you spot problems
-in the code.
+
+*Please send me corrections or suggestions.*
 
