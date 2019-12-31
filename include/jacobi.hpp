@@ -32,8 +32,8 @@ void Alloc2D(int M,                 //!< size of the array (outer)
 /// This function is the corresponding way to dellocate arrays
 /// that were created using Alloc2D()
 template<typename Entry>
-void Dealloc2D(Entry **paX,          //!< pointer to 1-D contiguous-memory array
-               Entry ***paaX);       //!< pointer to 2-D multidimensional array
+void Dealloc2D(Entry **paX,         //!< pointer to 1-D contiguous-memory array
+               Entry ***paaX);      //!< pointer to 2-D multidimensional array
 
 
 template<typename Scalar>
@@ -57,7 +57,7 @@ class Jacobi
   // after optimal superposition
   Scalar **M;              //!< store copy of matrix here (workspace)
   Scalar *_M;              //!< contents of M (contiguously allocated)
-  int *max_ind_per_row;    //!< for each row, store the index of the max entry
+  int *max_ind_row;        //!< for each row, store the index of the max element
   bool   *changed_row;     //!< was this row changed during previous iteration?
   // Precomputed cosine, sin, and tangent of the most recent rotation angle:
   Scalar c;                //!< = cos(θ)
@@ -84,10 +84,12 @@ public:
   /// @brief Calculate the eigenvalues and eigevectors of a symmetric matrix
   ///        using the Jacobi eigenvalue algorithm:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
-  void
+  ///        Return true if the algorithm failed to converge.
+  bool
   Diagonalize(ConstMat M,     //!< the matrix you wish to diagonalize (size n)
               Vector eval,    //!< store the eigenvalues here
-              Matrix evec);   //!< store the eigenvectors here (in rows)
+              Matrix evec,    //!< store the eigenvectors here (in rows)
+              int max_num_iters = 50); //!< limit the number of iterations
 
 private:
 
@@ -97,10 +99,32 @@ private:
   ///        (This will also zero M[j][i] since M is assumed to be symmetric.)
   ///        The results will be stored in the c, s, and t data members
   ///        (c,s,t store cos(θ), sin(θ), and tan(θ), respectively.)
-  void CalcRot(Matrix M,    //!< matrix
-               int i,       //!< row index
-               int j)       //!< column index
-
+  void CalcRot(Matrix M,   //!< matrix
+               int i,      //!< row index
+               int j);     //!< column index
+  /// @brief Apply the (previously calculated) rotation matrix to matrix M
+  ///        by multiplying it on both sides (a "similarity transform").
+  ///        (To save time, only update the elements in the upper-right
+  ///         triangular region of the matrix.)
+  void ApplyRot(Matrix M,  //!< matrix
+                int i,     //!< row index
+                int j);     //!< column index
+  /// @brief Multiply matrix E on the right by the (previously calculated)
+  ///         rotation matrix.
+  void ApplyRotRight(Matrix E,  //!< matrix
+                     int i,     //!< row index
+                     int j);    //!< column index
+  /// @brief Find the index in row i whose absolute value is largest.
+  int MaxIndexRow(ConstMat M, int i) const;
+  /// @brief Find the indices (i_max, j_max) marking the location of the
+  ///        entry in the matrix with the largest absolute value.  This
+  ///        exploits the max_index_row[] array to find the answer in O(n) time.
+  /// @returns void.  After it is invoked, the location of the largest matrix
+  ///        element will be stored in the i_max and j_max arguments.
+  void MaxEntry(ConstMat M, int& i_max, int& j_max) const;
+  /// @brief After a Givens rotation at location i,j, update the
+  ///        max_index_row[] array.  This requires O(n) time.
+  void UpdateMax(ConstMat M, int i, int j);
   // memory management:
   void Alloc(int N);
   void Init();
@@ -138,8 +162,8 @@ void Alloc2D(Integer const size[2], //!< size of the array in x,y directions
 template<typename Entry>
 void Alloc2D(int nrows,          //!< size of the array (outer)
              int ncolumns,       //!< size of the array (inner)
-             Entry **paX,           //!< pointer to 1-D contiguous-memory array
-             Entry ***paaX)         //!< pointer to 2-D multidimensional array
+             Entry **paX,        //!< pointer to 1-D contiguous-memory array
+             Entry ***paaX)      //!< pointer to 2-D multidimensional array
 {
   int size[2];
   size[0] = ncolumns;
@@ -321,7 +345,7 @@ ApplyRotRight(Matrix E,  //!< matrix
 
 template<typename Scalar, typename Vector, typename Matrix, typename ConstMat>
 void Jacobi<Scalar, Vector, Matrix, ConstMat>::
-MaxEntryPerRow(ConstMat M, int i) const {
+MaxIndexRow(ConstMat M, int i) const {
   int j_max = i+1;
   for(int j = i+2; j < n)
     if (std::abs(M[i][j]) > std::abs(M[i][j_max]))
@@ -340,7 +364,7 @@ MaxEntry(ConstMat M, int& i_max, int& j_max) const {
   i_max = 0;
   j_max = 0;
   for (int i=0; i < n; i++) {
-    j = max_entry_per_row[i];
+    j = max_index_row[i];
     if (std::abs(M[i][j]) > max_entry) {
       max_entry = std::abs(M[i][j]);
       i_max = i;
@@ -360,14 +384,14 @@ MaxEntry(ConstMat M, int& i_max, int& j_max) const {
 
 template<typename Scalar, typename Vector, typename Matrix, typename ConstMat>
 void Jacobi<Scalar, Vector, Matrix, ConstMat>::
-UpdateMaxEntry(ConstMat M, int i, int j) {
-  // Update "max_entry_per_row[]" after a Givens rotation at location i,j.
+UpdateMax(ConstMat M, int i, int j) {
+  // Update "max_index_row[]" after a Givens rotation at location i,j.
   // Note that a Givens rotation at location i,j will modify all of the matrix
   // elements containing at least one index which is either i or j
   // such as: M[w][i], M[i][w], M[w][j], M[j][w].
   // Check and see whether these modified matrix elements exceed the 
-  // corresponding values in max_entry_per_row[] array for that row.
-  // If so, then update max_entry_per_row for that row.
+  // corresponding values in max_index_row[] array for that row.
+  // If so, then update max_index_row for that row.
   // This is somewhat complicated by the fact that we must only consider
   // matrix elements in the upper-right triangle
   // (ie. matrix elements whose second index is >= the first index).
@@ -389,28 +413,29 @@ UpdateMaxEntry(ConstMat M, int i, int j) {
   //      |                          .    |
   //      |_                           . _|
 
-  Scalar tmp;
+  assert(i < j);
+
   for (int w = 0; w < i; w++) {
-    //M[w][i] was modified.  See if it exceeds the max_entry on row w
-    if (std::abs(M[w][i]) > max_entry_per_row[w])
-      max_entry_per_row[w] = i;
-    //M[w][j] was modified.  See if it exceeds the max_entry on row w
-    if (std::abs(M[w][j]) > max_entry_per_row[w])
-      max_entry_per_row[w] = j;
+    //M[w][i] was modified.  See if it exceeds the max element on row w
+    if (std::abs(M[w][i]) > max_index_row[w])
+      max_index_row[w] = i;
+    //M[w][j] was modified.  See if it exceeds the max element on row w
+    if (std::abs(M[w][j]) > max_index_row[w])
+      max_index_row[w] = j;
   }
   for (int w = i+1; w < j; w++) {
-    //M[w][j] was modified.  See if it exceeds the max_entry on row w
-    if (std::abs(M[w][j]) > max_entry_per_row[w])
-      max_entry_per_row[w] = j;
+    //M[w][j] was modified.  See if it exceeds the max element on row w
+    if (std::abs(M[w][j]) > max_index_row[w])
+      max_index_row[w] = j;
   }
   for (int w = i; w < n; w++) {
-    //M[i][w] was modified.  See if it exceeds the max_entry on row i
-    if (std::abs(M[i][w]) > max_entry_per_row[i])
-      max_entry_per_row[i] = w;
+    //M[i][w] was modified.  See if it exceeds the max element on row i
+    if (std::abs(M[i][w]) > max_index_row[i])
+      max_index_row[i] = w;
     if (w >= j) {
-      //M[j][w] was modified.  See if it exceeds the max_entry on row j
-      if (std::abs(M[j][w]) > max_entry_per_row[j])
-        max_entry_per_row[j] = w;
+      //M[j][w] was modified.  See if it exceeds the max element on row j
+      if (std::abs(M[j][w]) > max_index_row[j])
+        max_index_row[j] = w;
     }
   }
 }
@@ -418,16 +443,38 @@ UpdateMaxEntry(ConstMat M, int i, int j) {
 
 
 template<typename Scalar, typename Vector, typename Matrix, typename ConstMat>
-void Jacobi<Scalar, Vector, Matrix, ConstMat>::
-Diagonalize(ConstMat M,     //!< the matrix you wish to diagonalize (size n)
-            Vector eval,    //!< store the eigenvalues here
-            Matrix evec)    //!< store the eigenvectors here (in rows)
+bool Jacobi<Scalar, Vector, Matrix, ConstMat>::
+Diagonalize(ConstMat matrix,   //!< the matrix you wish to diagonalize (size n)
+            Vector eval,       //!< store the eigenvalues here
+            Matrix evec,       //!< store the eigenvectors here (in rows)
+            int max_num_iters) //!< limit the number of iterations
 {
+  // Copy the contents of the matrix to an area
+  // of memory we have permission to modify
+  for (int i = 0; i < n; i++)
+    for (int j = i; j < n; j++)
+      M[i][j] = matrix[i][j];
 
-  while (NOT_CONVERGED) {
+  // initialize the "max_index_row[i]" array  (useful for finding the max entry)
+  for (int i = 0; i < n; i++)
+    max_index_row[i] = MaxIndexRow(M, i);
+
+  int num_iters = 0;
+  while (NOT_CONVERGED) {   <-- CONTINUEHERE.  elaborate...
     int i,j;
-    for (
+    MaxEntry(M, i, j); // find the maximum entry in the matrix, store in i,j
+    CalcRot(M, i, j);  // calculate the parameters of the Givens rotation matrix
+    ApplyRot(M, i, j); // apply this rotation to the M matrix
+    ApplyRotRight(evec, i, j);//apply the rotation to the matrix of eigenvectors
+    UpdateMax(M, i, j);// update the entries in the max_index_row[] array
+                       // (so that we can quickly find the next maximum entry)
+    num_iters++;
+    if (num_iters > max_num_iters)
+      return true;
   }
+  for (int i = 0; i < n; i++)
+    eval[i] = M[i][i];
+  return false;
 }
 
 
@@ -440,7 +487,7 @@ void Jacobi<Scalar, Vector, Matrix, ConstMat>::
 Init() {
   n = 0;
   M = nullptr;
-  max_ind_per_row = nullptr;
+  max_ind_row = nullptr;
   changed_row = nullptr;
 }
 
@@ -449,9 +496,9 @@ void Jacobi<Scalar, Vector, Matrix, ConstMat>::
 Alloc(int n) {
   this->n = n;
   Alloc2D(n, n, &_M, &M);
-  max_ind_per_row = new int[n];
+  max_ind_row = new int[n];
   changed_row = new bool[n];
-  assert(_M && M && max_ind_per_row && changed_row);
+  assert(_M && M && max_ind_row && changed_row);
 }
 
 template<typename Scalar, typename Vector, typename Matrix, typename ConstMat>
@@ -459,8 +506,8 @@ void Jacobi<Scalar, Vector, Matrix, ConstMat>::
 Dealloc() {
   if (M)
     Dealloc2D(&_M, &M);
-  if (max_ind_per_row)
-    delete [] max_ind_per_row;
+  if (max_ind_row)
+    delete [] max_ind_row;
   if (changed_row)
     delete [] changed_row;
   Init();
@@ -476,9 +523,9 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix, ConstMat>& source)
   std::copy(source._M
             source._M + n*n,
             _M);
-  std::copy(source.max_ind_per_row,
-            source.max_ind_per_row + n,
-            max_ind_per_row);
+  std::copy(source.max_ind_row,
+            source.max_ind_row + n,
+            max_ind_row);
   std::copy(source.changed_row,
             source.changed_row + n,
             changed_row);
