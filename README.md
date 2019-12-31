@@ -26,10 +26,10 @@ Amazingly, as of 2020-1-01, no public-domain
 C++ code exists for matrix diagonalization.
 Other C++ libraries such as Eigen or GSL
 use somewhat more restrictive licenses.
-(In my case, that prevented me from contributing
-my own code that uses these libraries to some open-source
-projects that I care about.  So I wrote this library.)
-This code has not been optimized, abd does not run in parallel,
+(In my case, those license prevented me from contributing
+my own code to other open-source projects.
+So I wrote my own matrix diagonalization code.)
+This code has not been optimized, does not run in parallel,
 and it only works on dense square real symmetric matrices.
 However you can use this code in other projects
 (without worrying about how it may effect the licese used by those projects).
