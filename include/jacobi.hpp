@@ -378,12 +378,12 @@ UpdateMaxEntry(ConstMat M, int i, int j) {
   //      |    .     X         X          |
   //      |      .   X         X          |
   //      |        . X         X          |
-  //      |          X X X X X X X X X X  |
+  //      |          X X X X X X X X X X  |  i
   //      |            .       X          |
   //      |              .     X          |
   // M  = |                .   X          |
   //      |                  . X          |
-  //      |                    X X X X X  |
+  //      |                    X X X X X  |  j
   //      |                      .        |
   //      |                        .      |
   //      |                          .    |
@@ -392,30 +392,25 @@ UpdateMaxEntry(ConstMat M, int i, int j) {
   Scalar tmp;
   for (int w = 0; w < i; w++) {
     //M[w][i] was modified.  See if it exceeds the max_entry on row w
-    tmp = std::abs(M[w][i]);
-    if (tmp > max_entry_per_row[w])
+    if (std::abs(M[w][i]) > max_entry_per_row[w])
       max_entry_per_row[w] = i;
     //M[w][j] was modified.  See if it exceeds the max_entry on row w
-    tmp = std::abs(M[w][j]);
-    if (tmp > max_entry_per_row[w])
+    if (std::abs(M[w][j]) > max_entry_per_row[w])
       max_entry_per_row[w] = j;
   }
   for (int w = i+1; w < j; w++) {
     //M[w][j] was modified.  See if it exceeds the max_entry on row w
-    tmp = std::abs(M[w][j]);
-    if (tmp > max_entry_per_row[w])
+    if (std::abs(M[w][j]) > max_entry_per_row[w])
       max_entry_per_row[w] = j;
   }
   for (int w = i; w < n; w++) {
     //M[i][w] was modified.  See if it exceeds the max_entry on row i
-    tmp = std::abs(M[i][w]);
-    if (tmp > max_entry_per_row[i])
+    if (std::abs(M[i][w]) > max_entry_per_row[i])
       max_entry_per_row[i] = w;
     if (w >= j) {
-    //M[j][w] was modified.  See if it exceeds the max_entry on row j
-    tmp = std::abs(M[j][w]);
-    if (tmp > max_entry_per_row[j])
-      max_entry_per_row[j] = w;
+      //M[j][w] was modified.  See if it exceeds the max_entry on row j
+      if (std::abs(M[j][w]) > max_entry_per_row[j])
+        max_entry_per_row[j] = w;
     }
   }
 }
