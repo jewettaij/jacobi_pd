@@ -22,17 +22,18 @@ or any other C or C++ object which supports double-indexing.
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
-Amazingly, as of 2020-1-01, no public-domain 
+Amazingly, as of 2020-1-01, no *public-domain*
 C++ code exists for matrix diagonalization.
 Other C++ libraries such as Eigen or GSL
 use somewhat more restrictive licenses.
-(In my case, those license prevented me from contributing
-my own code to other open-source projects.
-So I wrote my own matrix diagonalization code.)
+
+*(In the past, those licenses have prevented me from borrowing existing
+matrix code and contributing it into other open-source projects.
+So I finally wrote my own code and posted it here.)*
+
 This code has not been optimized, does not run in parallel,
 and it only works on dense square real symmetric matrices.
-However you can use this code in other projects
-(without worrying about how it may effect the licese used by those projects).
+However you can freely use this humble code anywhere you like.
 Use at your own risk.
 
 
