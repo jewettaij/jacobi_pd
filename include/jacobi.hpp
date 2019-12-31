@@ -285,21 +285,24 @@ ApplyRot(Matrix M,  //!< matrix
   // Instead, to save time, we avoid the elements below the diagonal
 
   assert(i < j);
+
+  M[i][j] = 0.0;
+
   // compute M[w][i] and M[i][w] for all w!=i
   for (int w=0; w < i; w++)
-    M[w][i] = c*M[w][i] - s*M[w][j];    // 0 <= w < i <  j < n
+    M[w][i] = c*M[w][i] - s*M[w][j];    // 0 <= w <  i  <  j < n
   for (int w=i+1; w < j; w++)
-    M[i][w] = c*M[i][w] - s*M[w][j];    // 0 <= i < w <  j < n
-  for (int w=j; w < n; w++)
-    M[i][w] = c*M[i][w] - s*M[j][w];    // 0 <= i < j <= w < n
+    M[i][w] = c*M[i][w] - s*M[w][j];    // 0 <= i <  w  <  j < n
+  for (int w=j+1; w < n; w++)
+    M[i][w] = c*M[i][w] - s*M[j][w];    // 0 <= i < j+1 <= w < n
 
   // compute M[w][j] and M[w][j] for all w!=j
   for (int w=0; w < i; w++)
-    M[w][j] = s*M[w][i] + c*M[w][j];    // 0 <= w <  i <  j < n
-  for (int w=i; w < j; w++)
-    M[w][j] = s*M[i][w] + c*M[w][j];    // 0 <= i <= w <  j < n
+    M[w][j] = s*M[w][i] + c*M[w][j];    // 0 <=  w  <  i <  j < n
+  for (int w=i+1; w < j; w++)
+    M[w][j] = s*M[i][w] + c*M[w][j];    // 0 <= i+1 <= w <  j < n
   for (int w=j+1; w < n; w++)
-    M[j][w] = s*M[i][w] + c*M[j][w];    // 0 <= i <  j <  w < n
+    M[j][w] = s*M[i][w] + c*M[j][w];    // 0 <=  i  <  j <  w < n
 }
 
 
