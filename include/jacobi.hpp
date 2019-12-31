@@ -86,8 +86,8 @@ public:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
   void
   Diagonalize(ConstMat M,     //!< the matrix you wish to diagonalize (size n)
-              Vector evals,   //!< store the eigenvalues here
-              Matrix evects); //!< store the eigenvectors here (in rows)
+              Vector eval,    //!< store the eigenvalues here
+              Matrix evec);   //!< store the eigenvectors here (in rows)
 
 private:
 
@@ -244,7 +244,7 @@ ApplyRot(Matrix M,  //!< matrix
   assert(std::abs(t) <= 1.0);
   M[i][i] -= t * M[i][j];
   M[j][j] += t * M[i][j];
-  // Note: This is algebraically equivalent to doing it the straightforward way:
+  // Note: This is algebraically equivalent to:
   // M[i][i] = c*c*M[i][i] + s*s*M[j][j] - 2*s*c*M[i][j]
   // M[j][j] = s*s*M[i][i] + c*c*M[j][j] + 2*s*c*M[i][j]
 
@@ -277,19 +277,6 @@ ApplyRot(Matrix M,  //!< matrix
   for (int w=j+1; w < n; w++)
     M[j][w] = s*M[i][w] + c*M[j][w];    // 0 <= i <  j <  w < n
 }
-
-
-
-template<typename Scalar, typename Vector, typename Matrix, typename ConstMat>
-void Jacobi<Scalar, Vector, Matrix, ConstMat>::
-MaxIndexPerRow(int i) {
-  int j_max = i+1;
-  for(int j = i+2; j < n)
-    if (std::abs(M[i][j]) > std::abs(M[i][j_max]))
-      j_max = j;
-  return j_max;
-}
-
 
 
 /// @brief  Multiply matrix M on the RIGHT side only by a rotation matrix.
@@ -332,9 +319,121 @@ ApplyRotRight(Matrix E,  //!< matrix
 
 
 
+template<typename Scalar, typename Vector, typename Matrix, typename ConstMat>
+void Jacobi<Scalar, Vector, Matrix, ConstMat>::
+MaxEntryPerRow(ConstMat M, int i) const {
+  int j_max = i+1;
+  for(int j = i+2; j < n)
+    if (std::abs(M[i][j]) > std::abs(M[i][j_max]))
+      j_max = j;
+  assert(j_max > i);
+  return j_max;
+}
 
 
 
+template<typename Scalar, typename Vector, typename Matrix, typename ConstMat>
+void Jacobi<Scalar, Vector, Matrix, ConstMat>::
+MaxEntry(ConstMat M, int& i_max, int& j_max) const {
+  // find the maximum entry in the matrix M in O(n) time
+  Scalar max_entry = 0.0;
+  i_max = 0;
+  j_max = 0;
+  for (int i=0; i < n; i++) {
+    j = max_entry_per_row[i];
+    if (std::abs(M[i][j]) > max_entry) {
+      max_entry = std::abs(M[i][j]);
+      i_max = i;
+      j_max = j;
+    }
+  }
+  #ifndef NDEBUG
+  // -- remove the next 4 lines before publishing --
+  // make sure that the maximum element really is stored at i_max, j_max
+  for (int i = 0; i < n; i++)
+    for (int j = i; j < n; j++)
+      assert(std::abs(M[i][j]) <= max_entry);
+  // --
+  #endif
+}
+
+
+template<typename Scalar, typename Vector, typename Matrix, typename ConstMat>
+void Jacobi<Scalar, Vector, Matrix, ConstMat>::
+UpdateMaxEntry(ConstMat M, int i, int j) {
+  // Update "max_entry_per_row[]" after a Givens rotation at location i,j.
+  // Note that a Givens rotation at location i,j will modify all of the matrix
+  // elements containing at least one index which is either i or j
+  // such as: M[w][i], M[i][w], M[w][j], M[j][w].
+  // Check and see whether these modified matrix elements exceed the 
+  // corresponding values in max_entry_per_row[] array for that row.
+  // If so, then update max_entry_per_row for that row.
+  // This is somewhat complicated by the fact that we must only consider
+  // matrix elements in the upper-right triangle
+  // (ie. matrix elements whose second index is >= the first index).
+  // The modified elements we must consider are marked with an "X" below:
+  //                 i         j
+  //       _                             _
+  //      |  .       X         X          | 
+  //      |    .     X         X          |
+  //      |      .   X         X          |
+  //      |        . X         X          |
+  //      |          X X X X X X X X X X  |
+  //      |            .       X          |
+  //      |              .     X          |
+  // M  = |                .   X          |
+  //      |                  . X          |
+  //      |                    X X X X X  |
+  //      |                      .        |
+  //      |                        .      |
+  //      |                          .    |
+  //      |_                           . _|
+
+  Scalar tmp;
+  for (int w = 0; w < i; w++) {
+    //M[w][i] was modified.  See if it exceeds the max_entry on row w
+    tmp = std::abs(M[w][i]);
+    if (tmp > max_entry_per_row[w])
+      max_entry_per_row[w] = i;
+    //M[w][j] was modified.  See if it exceeds the max_entry on row w
+    tmp = std::abs(M[w][j]);
+    if (tmp > max_entry_per_row[w])
+      max_entry_per_row[w] = j;
+  }
+  for (int w = i+1; w < j; w++) {
+    //M[w][j] was modified.  See if it exceeds the max_entry on row w
+    tmp = std::abs(M[w][j]);
+    if (tmp > max_entry_per_row[w])
+      max_entry_per_row[w] = j;
+  }
+  for (int w = i; w < n; w++) {
+    //M[i][w] was modified.  See if it exceeds the max_entry on row i
+    tmp = std::abs(M[i][w]);
+    if (tmp > max_entry_per_row[i])
+      max_entry_per_row[i] = w;
+    if (w >= j) {
+    //M[j][w] was modified.  See if it exceeds the max_entry on row j
+    tmp = std::abs(M[j][w]);
+    if (tmp > max_entry_per_row[j])
+      max_entry_per_row[j] = w;
+    }
+  }
+}
+
+
+
+template<typename Scalar, typename Vector, typename Matrix, typename ConstMat>
+void Jacobi<Scalar, Vector, Matrix, ConstMat>::
+Diagonalize(ConstMat M,     //!< the matrix you wish to diagonalize (size n)
+            Vector eval,    //!< store the eigenvalues here
+            Matrix evec)    //!< store the eigenvectors here (in rows)
+{
+
+  while (NOT_CONVERGED) {
+    int i,j;
+    for (
+  }
+}
 
 
 

@@ -10,7 +10,7 @@ This repository contains [***public-domain***](LICENSE.md)
 header-only C++ source code for the
 [Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
 This remains one of the oldest and most popular algorithms for
-diagonalizing small, dense, square, real, symmetric matrices.
+diagonalizing dense, square, real, symmetric matrices.
 
 The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
 vector\<vector\<X\> \>, fixed-size arrays,
@@ -22,26 +22,29 @@ or any other C or C++ object which supports double-indexing.
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
-Amazingly, as of 2020-1-01, no public-domain C++ header code exists for
-matrix diagonalization.  Other C++ libraries such as Eigen or GSL use somewhat
-more restrictive licenses.  (In my case, that prevent me from using those
-libraries to contribute to some github projects.  So I wrote my own library.)
-This code has not been optimized, and does not run in parallel,
+Amazingly, as of 2020-1-01, no public-domain 
+C++ code exists for matrix diagonalization.
+Other C++ libraries such as Eigen or GSL
+use somewhat more restrictive licenses.
+(In my case, that prevented me from contributing
+my own code that uses these libraries to some open-source
+projects that I care about.  So I wrote this library.)
+This code has not been optimized, abd does not run in parallel,
 and it only works on dense square real symmetric matrices.
-However you can use this code in other projects (without worrying about
-how it may effect the licese used by those projects).
+However you can use this code in other projects
+(without worrying about how it may effect the licese used by those projects).
 Use at your own risk.
 
 
 ## Development Status: *Planning (pre-alpha)*
 
-As of 2019-12-28, this code is not complete and does not compile.
+As of 2019-12-28, this code is incomplete and does not compile.
 
 ## Installation
 
 This is a header-only library.
 
-Copy the files in the [include/jacobi.hpp](include) subdirectory,
+Copy the files in the [include](include) subdirectory,
 to a location in your
 [include path](https://www.rapidtables.com/code/linux/gcc/gcc-i.html).
 
