@@ -11,35 +11,6 @@
 namespace jacobi {
 
 
-#if 0
-// Because I allocate 2-dimensional arrays frequently, I created a 
-// few functions that make this more convenient.
-
-/// @brief  Allocate a 2-dimensional table row-major order
-template<typename Entry, typename Integer>
-void Alloc2D(Integer const size[2], //!< size of the array in x,y directions
-             Entry **paX,           //!< pointer to 1-D contiguous-memory array
-             Entry ***paaX);        //!< pointer to 2-D multidimensional array
-
-/// @brief
-/// Slightly different version of Alloc2D()
-/// In this version, the the size of the array specified by 2 integer arguments.
-template<typename Entry>
-void Alloc2D(int M,                 //!< size of the array (outer)
-             int N,                 //!< size of the array (inner)
-             Entry **paX,           //!< pointer to 1-D contiguous-memory array
-             Entry ***paaX);        //!< pointer to 2-D multidimensional array
-
-/// @brief
-/// This function is the corresponding way to dellocate arrays
-/// that were created using Alloc2D()
-template<typename Entry>
-void Dealloc2D(Entry **paX,         //!< pointer to 1-D contiguous-memory array
-               Entry ***paaX);      //!< pointer to 2-D multidimensional array
-
-#endif //#if 0
-
-
 
 template<typename Scalar>
 static inline Scalar SQR(Scalar x) {return x*x;}
@@ -60,10 +31,6 @@ class Jacobi
   int n;            // the size of the matrix
   // The next 3 data members store the rotation, translation and scale
   // after optimal superposition
-  #if 0
-  Scalar **M;              //!< store copy of matrix here (workspace)
-  Scalar *_M;              //!< contents of M (contiguously allocated)
-  #endif
   int *max_ind_row;        //!< for each row, store the index of the max element
   bool   *changed_row;     //!< was this row changed during previous iteration?
   // Precomputed cosine, sin, and tangent of the most recent rotation angle:
@@ -153,52 +120,6 @@ private:
 
 
 // -------------- IMPLEMENTATION --------------
-
-#if 0
-template<typename Entry, typename Integer>
-void Alloc2D(Integer const size[2], //!< size of the array in x,y directions
-             Entry **paX,           //!< pointer to 1-D contiguous-memory array
-             Entry ***paaX)         //!< pointer to 2-D multidimensional array
-{
-  assert(paX && paaX);
-
-  *paX = new Entry [size[0] * size[1]];
-
-  // Allocate a conventional 2-dimensional
-  // pointer-to-a-pointer data structure.
-  *paaX = new Entry* [size[1]];
-  for(Integer iy=0; iy<size[1]; iy++)
-    (*paaX)[iy] = &((*paX)[ iy*size[0] ]);
-  // The caller can access the contents of *paX using (*paaX)[i][j] notation.
-}
-
-template<typename Entry>
-void Alloc2D(int nrows,          //!< size of the array (outer)
-             int ncolumns,       //!< size of the array (inner)
-             Entry **paX,        //!< pointer to 1-D contiguous-memory array
-             Entry ***paaX)      //!< pointer to 2-D multidimensional array
-{
-  int size[2];
-  size[0] = ncolumns;
-  size[1] = nrows;
-  Alloc2D(size, paX, paaX);
-}
-
-
-template<typename Entry>
-void Dealloc2D(Entry **paX,          //!< pointer to 1-D contiguous-memory array
-               Entry ***paaX)        //!< pointer to 2-D multidimensional array
-{
-  if (paaX && *paaX) {
-    delete [] (*paaX);
-    *paaX = nullptr;
-  }
-  if (paX && *paX) {
-    delete [] *paX;
-    *paX = nullptr;
-  }
-}
-#endif //#if 0
 
 
 /// @brief Calculate the components of a rotation matrix which performs a
@@ -475,14 +396,6 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
             bool calc_evects,     //!< calculate the eigenvectors?
             int max_num_iters)    //!< limit the number of iterations
 {
-  #if 0
-  // The contents of the "matrix" argument cannot be modified,
-  // so copy the contents to an array we have write permission.
-  // of memory we have permission to modify
-  for (int i = 0; i < n; i++)
-    for (int j = i; j < n; j++)
-      M[i][j] = matrix[i][j];
-  #endif
 
   // initialize the "max_index_row[i]" array  (useful for finding the max entry)
   for (int i = 0; i < n; i++)
@@ -541,9 +454,6 @@ template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 Alloc(int n) {
   this->n = n;
-  #if 0
-  Alloc2D(n, n, &_M, &M);
-  #endif
   max_ind_row = new int[n];
   changed_row = new bool[n];
   assert(_M && M && max_ind_row && changed_row);
@@ -552,10 +462,6 @@ Alloc(int n) {
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 Dealloc() {
-  #if 0
-  if (M)
-    Dealloc2D(&_M, &M);
-  #endif
   if (max_ind_row)
     delete [] max_ind_row;
   if (changed_row)
@@ -570,11 +476,6 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix>& source)
   Init();
   Alloc(source.n);
   assert(n == source.n);
-  #if 0
-  std::copy(source._M
-            source._M + n*n,
-            _M);
-  #endif
   std::copy(source.max_ind_row,
             source.max_ind_row + n,
             max_ind_row);
@@ -586,9 +487,6 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix>& source)
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 swap(Jacobi<Scalar, Vector, Matrix> &other) {
-  #if 0
-  std::swap(_M, other._M);
-  #endif
   std::swap(max_ind_per_atom, other.max_ind_per_atom);
   std::swap(changed_row, other.changed_row);
   std::swap(n, other.n);
