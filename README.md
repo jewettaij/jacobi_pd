@@ -13,7 +13,7 @@ This remains one of the oldest and most popular algorithms for
 diagonalizing dense, square, real, symmetric matrices.
 
 The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
-vector\<vector\<X\> \>, fixed-size arrays,
+vector\<vector\<X\>\>, fixed-size arrays,
 or any other C or C++ object which supports double-indexing.
 (**X** is any real numeric type.  Complex numbers are not supported.)
 
