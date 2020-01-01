@@ -94,16 +94,14 @@ public:
   ///        Return true if the algorithm failed to converge.
   /// @note  To reduce the computation time (from copying the matrix contents),
   ///        the contents of the matrix M is modified during the calculation.
-  /// @note  To reduce the computation time further, you can omit the pevec
-  ///        argument.  In that case, the eigenvectors will not be calculated.
-  /// @note  To reduce the computation time further, you can omit the peval
-  ///        argument.  In that case, the eigenvalues will be stored in
-  ///        the diagonal elements of M.
+  /// @note  To reduce the computation time further, set calc_evects=false.
   bool
   Diagonalize(Matrix M,       //!< the matrix you wish to diagonalize (size n)
-              Vector *peval=nullptr,  //!< store the eigenvalues here
-              Matrix *pevec=nullptr,  //!< store the eigenvectors here (in rows)
-              int max_num_iters = 50); //!< limit the number of iterations
+              Vector eval,   //!< store the eigenvalues here
+              Matrix evec,   //!< store the eigenvectors here (in rows)
+              bool sort_decreasing=true, //!< sort eigenvalues decreasing order?
+              bool calc_evects=true,     //!< calculate the eigenvectors?
+              int max_num_iters = 50);   //!< limit the number of iterations
 
 private:
 
@@ -471,9 +469,11 @@ UpdateMax(Matrix M, int i, int j) {
 template<typename Scalar, typename Vector, typename Matrix>
 bool Jacobi<Scalar, Vector, Matrix>::
 Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
-            Vector *peval,     //!< store the eigenvalues here
-            Matrix *pevec,     //!< store the eigenvectors here (in rows)
-            int max_num_iters) //!< limit the number of iterations
+            Vector eval,          //!< store the eigenvalues here
+            Matrix evec,          //!< store the eigenvectors here (in rows)
+            bool sort_decreasing, //!< sort eigenvalues decreasing order?
+            bool calc_evects,     //!< calculate the eigenvectors?
+            int max_num_iters)    //!< limit the number of iterations
 {
   #if 0
   // The contents of the "matrix" argument cannot be modified,
@@ -495,8 +495,8 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
     CalcRot(M, i, j);  // calculate the parameters of the Givens rotation matrix
     ApplyRot(M, i, j); // apply this rotation to the M matrix
 
-    if (pevec)         // Optional: If the caller wants the eigenvectors, then
-      ApplyRotRight(*pevec,i,j); //apply the rotation to the eigenvector matrix.
+    if (calc_evects)   // Optional: If the caller wants the eigenvectors, then
+      ApplyRotRight(evec,i,j); //apply the rotation to the eigenvector matrix.
 
     UpdateMax(M, i, j);// update the entries in the max_index_row[] array
                        // (so that we can quickly find the next maximum entry)
@@ -505,9 +505,20 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
       return true;
   }
 
-  if (peval) // Optional:
-    for (int i = 0; i < n; i++)
-      (*peval)[i] = M[i][i];
+  for (int i = 0; i < n; i++)
+    eval[i] = M[i][i];
+
+  if (sort_decreasing) {//!< sort eigenvalues decreasing order?
+    for (int i = 0; i < n; i++) {
+      int i_max = i;
+      for (int j = i+1; j < n; j++)
+        if (eval[j] > eval[i_max])
+          i_max = j;
+      std::swap(eval[i], eval[i_max]);
+      for (int k = 0; k < n; k++)
+        std::swap(evect[i][k], evect[i_max][k]);
+    }
+  }
 
   return false;
 }
