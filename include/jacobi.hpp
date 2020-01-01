@@ -28,11 +28,11 @@ static inline Scalar SQR(Scalar x) {return x*x;}
 template<typename Scalar, typename Vector, typename Matrix>
 class Jacobi
 {
-  int n;            // the size of the matrix
+  int n;                   //!< the size of the matrix
   // The next 3 data members store the rotation, translation and scale
   // after optimal superposition
-  int *max_ind_row;        //!< for each row, store the index of the max element
-  bool   *changed_row;     //!< was this row changed during previous iteration?
+  int *max_index_row;      //!< for each row, store the index of the maximum off-diagonal element
+  bool *underflow;       //!< was this row changed during previous iteration?
   // Precomputed cosine, sin, and tangent of the most recent rotation angle:
   Scalar c;                //!< = cos(θ)
   Scalar s;                //!< = sin(θ)
@@ -81,6 +81,7 @@ private:
   void CalcRot(Matrix M,   //!< matrix
                int i,      //!< row index
                int j);     //!< column index
+
   /// @brief Apply the (previously calculated) rotation matrix to matrix M
   ///        by multiplying it on both sides (a "similarity transform").
   ///        (To save time, only update the elements in the upper-right
@@ -88,26 +89,28 @@ private:
   void ApplyRot(Matrix M,  //!< matrix
                 int i,     //!< row index
                 int j);     //!< column index
+
   /// @brief Multiply matrix E on the right by the (previously calculated)
   ///         rotation matrix.
   void ApplyRotRight(Matrix E,  //!< matrix
                      int i,     //!< row index
                      int j);    //!< column index
+
   /// @brief Find the index in row i whose absolute value is largest.
   int MaxIndexRow(Matrix M, int i) const;
+
   /// @brief Find the indices (i_max, j_max) marking the location of the
   ///        entry in the matrix with the largest absolute value.  This
   ///        exploits the max_index_row[] array to find the answer in O(n) time.
   /// @returns void.  After it is invoked, the location of the largest matrix
   ///        element will be stored in the i_max and j_max arguments.
   void MaxEntry(Matrix M, int& i_max, int& j_max) const;
-  /// @brief After a Givens rotation at location i,j, update the
-  ///        max_index_row[] array.  This requires O(n) time.
-  void UpdateMax(Matrix M, int i, int j);
+
   // memory management:
   void Alloc(int N);
   void Init();
   void Dealloc();
+
   // memory management: copy constructor, swap, and assignment operator
   Jacobi(const Jacobi<Scalar, Vector, Matrix>& source);
   void swap(Jacobi<Scalar, Vector, Matrix> &other);
@@ -160,6 +163,7 @@ CalcRot(Matrix M,    //!< matrix
 /// @brief  Perform a similarity transform by multiplying matrix M on both
 ///         sides by a rotation matrix (applying its inverse to the other side)
 ///         This matrix performs a rotation in the i,j plane by angle θ.
+///         Also update the max_index_row[] and underflow[] arrays.
 /// @details This function assumes that i<j and that cos(θ), sin(θ), and tan(θ)
 ///         have already been computed (by invoking CalcRot()).
 ///         To save time, since the matrix is symmetric, the elements
@@ -182,10 +186,40 @@ CalcRot(Matrix M,    //!< matrix
 ///      |                        .      |
 ///      |                          .    |
 ///      |_                           1 _|
+/// @endcode
 ///
 /// Let M' denote the matrix M after multiplication by R^T and R.
 /// The components of M' are:
 ///   M'_uv =  Σ_w  Σ_z   R_wu * M_wz * R_zv
+///
+/// Note that a Givens rotation at location i,j will modify all of the matrix
+/// elements containing at least one index which is either i or j
+/// such as: M[w][i], M[i][w], M[w][j], M[j][w].
+/// Check and see whether these modified matrix elements exceed the 
+/// corresponding values in max_index_row[] array for that row.
+/// If so, then update max_index_row for that row.
+/// This is somewhat complicated by the fact that we must only consider
+/// matrix elements in the upper-right triangle strictly above the diagonal.
+/// (ie. matrix elements whose second index is > the first index).
+/// The modified elements we must consider are marked with an "X" below:
+///
+/// @code
+///                 i         j
+///       _                             _
+///      |  .       X         X          | 
+///      |    .     X         X          |
+///      |      .   X         X          |
+///      |        . X         X          |
+///      |          X X X X X 0 X X X X  |  i
+///      |            .       X          |
+///      |              .     X          |
+/// M  = |                .   X          |
+///      |                  . X          |
+///      |                    X X X X X  |  j
+///      |                      .        |
+///      |                        .      |
+///      |                          .    |
+///      |_                           . _|
 /// @endcode
 
 template<typename Scalar, typename Vector, typename Matrix>
@@ -208,37 +242,50 @@ ApplyRot(Matrix M,  //!< matrix
   // M[j][j] = s*s*M[i][i] + c*c*M[j][j] + 2*s*c*M[i][j]
 
   // Compute the off-diagonal elements of M which have changed:
-  //   This code is slow, but easier to undestand.  Commenting out:
-  //for (int w = 0; w < n; w++) {
-  //  if (w != i)
-  //    M[w][i] = c*M[w][i] - s*M[w][j];
-  //  if (w != j)
-  //    M[w][j] = s*M[w][i] + c*M[w][j];
-  //  M[i][w] = M[w][i];
-  //  M[j][w] = M[w][j];
-  //}
-  // Instead, to save time, we avoid the elements below the diagonal
 
   assert(i < j);
+
+  underflow[i] = M[i][i] + M[i][j] == M[i][i];
+  underflow[j] = M[j][j] + M[i][j] == M[j][j];
 
   M[i][j] = 0.0;
 
   // compute M[w][i] and M[i][w] for all w!=i
-  for (int w=0; w < i; w++)
-    M[w][i] = c*M[w][i] - s*M[w][j];    // 0 <= w <  i  <  j < n
-  for (int w=i+1; w < j; w++)
-    M[i][w] = c*M[i][w] - s*M[w][j];    // 0 <= i <  w  <  j < n
-  for (int w=j+1; w < n; w++)
-    M[i][w] = c*M[i][w] - s*M[j][w];    // 0 <= i < j+1 <= w < n
+  for (int w=0; w < i; w++) {           // 0 <= w <  i  <  j < n
+    M[w][i] = c*M[w][i] - s*M[w][j];
+    if (std::abs(M[w][i]) > max_index_row[w]) max_index_row[w] = i;
+    underflow[w] &= M[w][w] + M[w][i] == M[w][w];
+  }
+  for (int w=i+1; w < j; w++) {         // 0 <= i <  w  <  j < n
+    M[i][w] = c*M[i][w] - s*M[w][j];
+    if (std::abs(M[i][w]) > max_index_row[i]) max_index_row[i] = w;
+    underflow[w] &= M[w][w] + M[i][w] == M[w][w];
+  }
+  for (int w=j+1; w < n; w++) {         // 0 <= i < j+1 <= w < n
+    M[i][w] = c*M[i][w] - s*M[j][w];
+    if (std::abs(M[i][w]) > max_index_row[i]) max_index_row[i] = w;
+    underflow[w] &= M[w][w] + M[i][w] == M[w][w];
+  }
 
   // compute M[w][j] and M[w][j] for all w!=j
-  for (int w=0; w < i; w++)
+  for (int w=0; w < i; w++) {
     M[w][j] = s*M[w][i] + c*M[w][j];    // 0 <=  w  <  i <  j < n
-  for (int w=i+1; w < j; w++)
+    if (std::abs(M[w][j]) > max_index_row[w]) max_index_row[w] = j;
+    underflow[w] &= M[w][w] + M[w][j] == M[w][w];
+  }
+  for (int w=i+1; w < j; w++) {
     M[w][j] = s*M[i][w] + c*M[w][j];    // 0 <= i+1 <= w <  j < n
-  for (int w=j+1; w < n; w++)
+    if (std::abs(M[w][j]) > max_index_row[w]) max_index_row[w] = j;
+    underflow[w] &= M[w][w] + M[w][j] == M[w][w];
+  }
+  for (int w=j+1; w < n; w++) {
     M[j][w] = s*M[i][w] + c*M[j][w];    // 0 <=  i  <  j <  w < n
+    if (std::abs(M[j][w]) > max_index_row[j]) max_index_row[j] = w;
+    underflow[w] &= M[w][w] + M[j][w] == M[w][w];
+  }
 }
+
+
 
 
 /// @brief  Multiply matrix M on the RIGHT side only by a rotation matrix.
@@ -320,72 +367,6 @@ MaxEntry(Matrix M, int& i_max, int& j_max) const {
 }
 
 
-template<typename Scalar, typename Vector, typename Matrix>
-void Jacobi<Scalar, Vector, Matrix>::
-UpdateMax(Matrix M, int i, int j) {
-  // Update "max_index_row[]" after a Givens rotation at location i,j.
-  // Note that a Givens rotation at location i,j will modify all of the matrix
-  // elements containing at least one index which is either i or j
-  // such as: M[w][i], M[i][w], M[w][j], M[j][w].
-  // Check and see whether these modified matrix elements exceed the 
-  // corresponding values in max_index_row[] array for that row.
-  // If so, then update max_index_row for that row.
-  // This is somewhat complicated by the fact that we must only consider
-  // matrix elements in the upper-right triangle strictly above the diagonal.
-  // (ie. matrix elements whose second index is > the first index).
-  // The modified elements we must consider are marked with an "X" below:
-  //                 i         j
-  //       _                             _
-  //      |  .       X         X          | 
-  //      |    .     X         X          |
-  //      |      .   X         X          |
-  //      |        . X         X          |
-  //      |          . X X X X 0 X X X X  |  i
-  //      |            .       X          |
-  //      |              .     X          |
-  // M  = |                .   X          |
-  //      |                  . X          |
-  //      |                    . X X X X  |  j
-  //      |                      .        |
-  //      |                        .      |
-  //      |                          .    |
-  //      |_                           . _|
-
-  assert(i < j);
-
-  // -- first check the entries in columns i and j --
-  for (int w = 1; w < i; w++) {
-    //M[w][i] was modified.  See if it exceeds the max element on row w
-    if (std::abs(M[w][i]) > max_index_row[w])
-      max_index_row[w] = i;
-    //M[w][j] was modified.  See if it exceeds the max element on row w
-    if (std::abs(M[w][j]) > max_index_row[w])
-      max_index_row[w] = j;
-  }
-  for (int w = i+1; w < j; w++) {
-    //M[w][j] was modified.  See if it exceeds the max element on row w
-    if (std::abs(M[w][j]) > max_index_row[w])
-      max_index_row[w] = j;
-  }
-
-  // -- now check the entries in rows i and j --
-  for (int w = i+1; w < j; w++) {
-    //M[i][w] was modified.  See if it exceeds the max element on row i
-    if (std::abs(M[i][w]) > max_index_row[i])
-      max_index_row[i] = w;
-  }
-  assert(M[i][j] == 0.0);
-  for (int w = j+1; w < n; w++) {
-    //M[i][w] was modified.  See if it exceeds the max element on row i
-    if (std::abs(M[i][w]) > max_index_row[i])
-      max_index_row[i] = w;
-    //M[j][w] was modified.  See if it exceeds the max element on row j
-    if (std::abs(M[j][w]) > max_index_row[j])
-      max_index_row[j] = w;
-  }
-}
-
-
 
 template<typename Scalar, typename Vector, typename Matrix>
 bool Jacobi<Scalar, Vector, Matrix>::
@@ -396,23 +377,30 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
             bool calc_evects,     //!< calculate the eigenvectors?
             int max_num_iters)    //!< limit the number of iterations
 {
-
-  // initialize the "max_index_row[i]" array  (useful for finding the max entry)
-  for (int i = 0; i < n; i++)
+  for (int i = 0; i < n; i++) {
+    //initialize the "max_index_row[]" array (useful for finding the max entry)
     max_index_row[i] = MaxIndexRow(M, i);
+    //initialize the "underflow[]" array (needed to stop iterating)
+    underflow[i] = false;
+  }
 
   int num_iters = 0;
-  while (NOT_CONVERGED) {   <-- CONTINUEHERE.  elaborate...
+  bool converged = false;
+  while (! converged) {
     int i,j;
     MaxEntry(M, i, j); // find the maximum entry in the matrix, store in i,j
+
     CalcRot(M, i, j);  // calculate the parameters of the Givens rotation matrix
     ApplyRot(M, i, j); // apply this rotation to the M matrix
 
     if (calc_evects)   // Optional: If the caller wants the eigenvectors, then
       ApplyRotRight(evec,i,j); //apply the rotation to the eigenvector matrix.
 
-    UpdateMax(M, i, j);// update the entries in the max_index_row[] array
-                       // (so that we can quickly find the next maximum entry)
+    converged = true;
+    for (int k=0; k<n; k++)
+      if (! underflow[k])
+        converged = false;
+
     num_iters++;
     if (num_iters > max_num_iters)
       return true;
@@ -447,7 +435,7 @@ Init() {
   n = 0;
   M = nullptr;
   max_ind_row = nullptr;
-  changed_row = nullptr;
+  underflow = nullptr;
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
@@ -455,8 +443,8 @@ void Jacobi<Scalar, Vector, Matrix>::
 Alloc(int n) {
   this->n = n;
   max_ind_row = new int[n];
-  changed_row = new bool[n];
-  assert(_M && M && max_ind_row && changed_row);
+  underflow = new bool[n];
+  assert(_M && M && max_ind_row && underflow);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
@@ -464,8 +452,8 @@ void Jacobi<Scalar, Vector, Matrix>::
 Dealloc() {
   if (max_ind_row)
     delete [] max_ind_row;
-  if (changed_row)
-    delete [] changed_row;
+  if (underflow)
+    delete [] underflow;
   Init();
 }
 
@@ -479,16 +467,16 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix>& source)
   std::copy(source.max_ind_row,
             source.max_ind_row + n,
             max_ind_row);
-  std::copy(source.changed_row,
-            source.changed_row + n,
-            changed_row);
+  std::copy(source.underflow,
+            source.underflow + n,
+            underflow);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 swap(Jacobi<Scalar, Vector, Matrix> &other) {
   std::swap(max_ind_per_atom, other.max_ind_per_atom);
-  std::swap(changed_row, other.changed_row);
+  std::swap(underflow, other.underflow);
   std::swap(n, other.n);
 }
 
