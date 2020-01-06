@@ -24,27 +24,14 @@ void GenRandOrth(int n,
 	         Matrix R)
 {
   std::default_random_engine generator;
-  std::uniform_real_distribution<Scalar> ran_gen01();
-  
+  std::normal_distribution<double> distribution(0,1); //(Gaussian distribution)
+
   for (int i = 0; i < n; i++) {
-    Scalar rsq = 2.0;
-    // Generate a random direction in R^n.
-    // One way to do this is to create a random vector in the -1,1 unit cube,
-    // (ie, with each component lying the real interval from [-1,1]), and
-    // discard it if the resulting vector lies outside the unit sphere (if r>1).
-    // Store the result in "v".
-    // (Note: For large n, this will be innefficient, because an exponentially
-    //  vanishingly small fraction of vectors will not be discarded. In that
-    //  case, here is an alternate method: Generate n random numbers which
-    //  are distributed according to the normal (Gaussian) distribution
-    //  centered at 0.  You don't have to discard any vectors this way.)
-    while ((rsq > 0.0) && (rsq <= 1.0)) {
-      rsq = 0.0;
-      for (int j = 0; j < n; j++) {
-        v[j] = 2*ran_gen01(generator) - 1.0;
-        rsq += v[j]*v[j];
-      }
-    }
+    // Generate a vector in a random direction
+    // (This works because we are using a normal (a.k.a. Gaussian) distribution)
+    for (int j = 0; j < n; j++)
+    v[j] = distribution(generator);
+
     //Now subtract from v, the projection of v onto the first i-1 rows of R.
     //This will produce a vector which is orthogonal to these i-1 row-vectors.
     for (int k = 0; k < i; k++) {
@@ -66,6 +53,7 @@ void GenRandOrth(int n,
       R[i][j] = v[j];
   } //for (int i = 0; i < n; i++)
 } //void GenRandOrth()
+
 
 
 
