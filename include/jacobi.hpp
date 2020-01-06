@@ -8,7 +8,7 @@
 #include <cassert>
 
 
-namespace jacobi {
+namespace jacobi_public_domain {
 
 
 

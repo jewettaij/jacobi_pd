@@ -5,11 +5,15 @@
 #include <chrono>
 #include <random>
 #include "matrix_alloc.hpp"
+#include "jacobi.hpp"
+
 
 using std::cout;
 using std::endl;
 using std::setprecision;
 using namespace matrix_alloc;
+using namespace jacobi_public_domain;
+
 
 template<typename T>
 using vector = std::vector<T>;
@@ -20,13 +24,11 @@ using complex = std::complex<T>;
 /// @brief
 /// Generate a random orthogonal n x n matrix
 template<typename Scalar, typename Matrix>
-void GenRandOrth(int n,
-	         Matrix R)
+void GenRandOrth(Matrix R,
+                 int n,
+                 std::default_random_engine &generator=nullptr)
 {
-  // construct a trivial random generator engine from a time-based seed:
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-  std::default_random_engine generator (seed);
-  std::normal_distribution<double> distribution(0,1); //(Gaussian distribution)
+  std::normal_distribution<double> gaussian_distribution(0,1);
 
   for (int i = 0; i < n; i++) {
     // Generate a vector, "v", in a random direction subject to the constraint
@@ -36,7 +38,7 @@ void GenRandOrth(int n,
       // Generate a vector in a random direction
       // (This works because we are using a normal (Gaussian) distribution)
       for (int j = 0; j < n; j++)
-        v[j] = distribution(generator);
+        v[j] = gaussian_distribution(generator);
 
       //Now subtract from v, the projection of v onto the first i-1 rows of R.
       //This will produce a vector which is orthogonal to these i-1 row-vectors.
@@ -108,57 +110,90 @@ static inline void MatProduct3(Scalar const* const *A,
 
 
 
-
-void test1() {
+template <typename Scalar>
+void TestDiagonalization(int n=3
+                         int n_matrices=100,
+                         int n_tests_per_matrix=50)
+{
   cout << endl << "-- Diagonalization test (real symmetric)  --" << endl;
-  
-  const int n = 3;
-  //double matrix[n][n] = { {2.0, 1.0, 1.0},
-  //                        {1.0, 2.0, 1.0},
-  //                        {1.0, 1.0, 2.0} };
-  ///* Its eigenvalues are {4, 1, 1} */
 
-  double **M, **R, **Rt, **D, **tmp;
-  double *_M, *_R, *_Rt, *_D, *_tmp;
-  Alloc2D(3, 3, &_M, &M);
-  Alloc2D(3, 3, &_R, &R);
-  Alloc2D(3, 3, &_Rt, &Rt);
-  Alloc2D(3, 3, &_D, &D);
-  Alloc2D(3, 3, &_tmp, &tmp);
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++)
-      D[i][j] = 0.0;
-  D[0][0] = 100.0;
-  D[1][1] = 101.00001;
-  D[2][2] = 101.0;
-  RotMatAXYZ(R, -2.7, 0.1, 0.9, -0.7);
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++)
-      Rt[i][j] = R[j][i];
-  
-  MatProduct3(D, Rt, tmp);
-  MatProduct3(R, tmp, M);
+  Jacobi eigen_calc(n);
 
-  cout << "Eigenvectors (columns) which are known in advance, Rij = \n";
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      cout << R[i][j] << " ";
+  Scalar *evals = new Scalar[n];
+
+  // construct a trivial random generator engine from a time-based seed:
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  std::default_random_engine generator(seed);
+  std::uniform_real_distribution<Scalar> random_real01();
+
+  Scalar **M, **R, **Rt, **D, **tmp;
+  Scalar *_M, *_R, *_Rt, *_D, *_tmp;
+  Alloc2D(n, n, &_M, &M);
+  Alloc2D(n, n, &_R, &R);
+  Alloc2D(n, n, &_Rt, &Rt);
+  Alloc2D(n, n, &_D, &D);
+  Alloc2D(n, n, &_tmp, &tmp);
+
+  for(int imat = 0; imat < n_matrices; imat++) {
+
+    // Randomly generate the eigenvalues
+    // D is the diagonal matrix whose diagonal elements are the eigenvalues
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)
+        D[i][j] = 0.0;
+    for (int i = 0; i < n; i++) {
+      D[i][i] = random_real01();
+      if (D[i][i] != 0.0)
+        //D[i][i] = logarithm of a random number from (0,1]
+        D[i][i] = -std::log(D[i][i]);
+      if (random_real01() < 0.5)
+        D[i][i] = -D[i][i];
     }
-    cout << "\n";
-  }
-  cout << "  (The eigenvector should match one of these columns.)\n";
-  cout << "\n";
 
-  PEigenCalculator<double> pe(3, true);
-  double evec[3];
-  double eval = pe.PrincipalEigen(M, evec);
-  cout << " --- Results using PEigenCalculator ---\n";
-  cout << "Eigen value: " << setprecision(16) << eval << endl;
-  cout << "Eigen vector:";
-  for(int i = 0;i < n;i++) {
-    cout << evec[i] << " ";
-  }
-  cout << endl;
+    // Randomly generate the R and Rt matrices:
+    GenRandOrth(R, n, generator);
+    // Rt is the transpose of R
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)
+        Rt[i][j] = R[j][i];
+
+    // Construct the test matrix M = Rt * D * R
+    mmult(Rt, D, tmp, n);
+    mmult(tmp, R, M, n);
+
+    for (int i_test = 0; i_test < n_tests_per_matrix; i++) {
+      //cout << "Eigenvectors (columns) which are known in advance, Rij = \n";
+      //for (int i = 0; i < n; i++) {
+      //  for (int j = 0; j < n; j++) {
+      //    cout << R[i][j] << " ";
+      //  }
+      //  cout << "\n";
+      //}
+      //cout << "  (The eigenvector should match one of these columns.)\n";
+      //cout << "\n";
+
+      // Now, calculate the eigenvalues and eigenvectors
+      eigen_calc.Jacobi(M, eval, Rt);
+      //cout << " --- Results using PEigenCalculator ---\n";
+      //cout << "Eigen value: " << setprecision(16) << eval << endl;
+      //cout << "Eigen vector:";
+      //for(int i = 0;i < n;i++) {
+      //  cout << evec[i] << " ";
+      //}
+      //cout << endl;
+
+    } //for (int i_test = 0; i_test < n_tests_per_matrix; i++)
+
+  } //for(int imat = 0; imat < n_matrices; imat++) {
+
+
   
+  Dealloc2D(&_M, &M);
+  Dealloc2D(&_R, &R);
+  Dealloc2D(&_Rt, &Rt);
+  Dealloc2D(&_D, &D);
+  Dealloc2D(&_tmp, &tmp);
+  delete [] evals;
+
   return EXIT_SUCCESS;
 }
