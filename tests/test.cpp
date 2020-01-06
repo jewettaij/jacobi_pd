@@ -2,17 +2,72 @@
 #include <cmath>
 #include <iomanip>
 #include <cstdlib>
+#include <ctime>
+#include <random>
+#include "matrix_alloc.hpp"
 
 using std::cout;
 using std::endl;
 using std::setprecision;
-using lambda_lanczos::LambdaLanczos;
+using namespace matrix_alloc;
 
 template<typename T>
 using vector = std::vector<T>;
 
 template<typename T>
 using complex = std::complex<T>;
+
+/// @brief
+/// Generate a random orthogonal n x n matrix
+template<typename Scalar, typename Matrix>
+void GenRandOrth(int n,
+	         Matrix R)
+{
+  std::default_random_engine generator;
+  std::uniform_real_distribution<Scalar> ran_gen01();
+  
+  for (int i = 0; i < n; i++) {
+    Scalar rsq = 2.0;
+    // Generate a random direction in R^n.
+    // One way to do this is to create a random vector in the -1,1 unit cube,
+    // (ie, with each component lying the real interval from [-1,1]), and
+    // discard it if the resulting vector lies outside the unit sphere (if r>1).
+    // Store the result in "v".
+    // (Note: For large n, this will be innefficient, because an exponentially
+    //  vanishingly small fraction of vectors will not be discarded. In that
+    //  case, here is an alternate method: Generate n random numbers which
+    //  are distributed according to the normal (Gaussian) distribution
+    //  centered at 0.  You don't have to discard any vectors this way.)
+    while ((rsq > 0.0) && (rsq <= 1.0)) {
+      rsq = 0.0;
+      for (int j = 0; j < n; j++) {
+        v[j] = 2*ran_gen01(generator) - 1.0;
+        rsq += v[j]*v[j];
+      }
+    }
+    //Now subtract from v, the projection of v onto the first i-1 rows of R.
+    //This will produce a vector which is orthogonal to these i-1 row-vectors.
+    for (int k = 0; k < i; k++) {
+      Scalar v_dot_Ri = 0.0
+      for (int j = 0; j < n; j++)
+        v_dot_Ri += v[j] * R[k][j]; // = <v , R[i]>
+      for (int j = 0; j < n; j++)
+        v[j] -= v_dot_Ri * R[i][j] // = v - <V,R[i]> R[i]
+    }
+    // Now normalize what remains
+    rsq = 0.0;
+    for (int j = 0; j < n; j++)
+      rsq += v[j]*v[j];
+    r_inv = 1.0 / std::sqrt(rsq);
+    for (int j = 0; j < n; j++)
+      v[j] *= r_inv;
+    // Now copy this vector to the i'th row of R
+    for (int j = 0; j < n; j++)
+      R[i][j] = v[j];
+  } //for (int i = 0; i < n; i++)
+} //void GenRandOrth()
+
+
 
 /// @brief
 /// Multiply two matrices A and B, store the result in C. (C = AB).
