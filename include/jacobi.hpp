@@ -11,9 +11,12 @@
 namespace jacobi_public_domain {
 
 
-
 template<typename Scalar>
 static inline Scalar SQR(Scalar x) {return x*x;}
+
+// Sort the rows in M (size nxn) according to the numbers in v (size n)
+template<typename Vector, typename Matrix>
+static inline void SortRows(Vector v, Matrix M, int n);
 
 
 /// @class Jacobi
@@ -176,13 +179,13 @@ CalcRot(Matrix M,    //!< matrix
 ///      |  1                            | 
 ///      |    .                          |
 ///      |      .                        |
-///      |        .                      |
+///      |        1                      |
 ///      |          c   ...   s          |
 ///      |          .  .      .          |
 /// R  = |          .    1    .          |
 ///      |          .      .  .          |
 ///      |          -s  ...   c          |
-///      |                      .        |
+///      |                      1        |
 ///      |                        .      |
 ///      |                          .    |
 ///      |_                           1 _|
@@ -292,25 +295,7 @@ ApplyRot(Matrix M,  //!< matrix
 ///         This matrix performs a rotation in the i,j plane by angle θ  (where
 ///         the arguments "s" and "c" refer to cos(θ) and sin(θ), respectively).
 /// @code
-///
-/// E'_uv = Σ_w  E_uw * R_wv
-///
-/// where:
-///                 i         j
-///       _                             _
-///      |  1                            | 
-///      |    .                          |
-///      |      .                        |
-///      |        .                      |
-///      |          c   ...   s          |
-///      |          .  .      .          |
-/// R  = |          .    1    .          |
-///      |          .      .  .          |
-///      |          -s  ...   c          |
-///      |                      .        |
-///      |                        .      |
-///      |                          .    |
-///      |_                           1 _|
+///   E'_uv = Σ_w  E_uw * R_wv
 /// @endcode
 
 template<typename Scalar, typename Vector, typename Matrix>
@@ -381,7 +366,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
     //initialize the "max_index_row[]" array (useful for finding the max entry)
     max_index_row[i] = MaxIndexRow(M, i);
     //initialize the "underflow[]" array (needed to stop iterating)
-    underflow[i] = false;
+    underflow[i] = false;<-CONTINUEHERE: BUG THIS WONT WORK (consider eval[i]=0)
   }
 
   int num_iters = 0;
@@ -409,23 +394,29 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
   for (int i = 0; i < n; i++)
     eval[i] = M[i][i];
 
-  if (sort_decreasing) {//!< sort eigenvalues decreasing order?
-    for (int i = 0; i < n; i++) {
-      int i_max = i;
-      for (int j = i+1; j < n; j++)
-        if (eval[j] > eval[i_max])
-          i_max = j;
-      std::swap(eval[i], eval[i_max]);
-      for (int k = 0; k < n; k++)
-        std::swap(evect[i][k], evect[i_max][k]);
-    }
-  }
-
+  //!< sort eigenvalues decreasing order?
+  if (sort_decreasing)
+    SortRows(eval, evec, n);
   return false;
 }
 
 
 
+//Sort the rows of a matrix "evec" by the numbers contained in "eval"
+//(This is a sloppy inneficient O(n^2) sorting method, but usually n is small.)
+template<typename Vector, typename Matrix>
+void SortRows(Vector eval, Matrix evec, int n)
+{
+  for (int i = 0; i < n; i++) {
+    int i_max = i;
+    for (int j = i+1; j < n; j++)
+      if (eval[j] > eval[i_max])
+        i_max = j;
+    std::swap(eval[i], eval[i_max]);
+    for (int k = 0; k < n; k++)
+      std::swap(evec[i][k], evec[i_max][k]);
+  }
+}
 
 
 

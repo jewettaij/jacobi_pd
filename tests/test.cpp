@@ -14,12 +14,37 @@ using std::setprecision;
 using namespace matrix_alloc;
 using namespace jacobi_public_domain;
 
-
+// are two numbers "similar"?
 template<typename T>
-using vector = std::vector<T>;
+inline static bool Similar(T a, T b, T eps=1.0e-06) {
+  return std::abs(a - b) < std::abs(eps);
+}
 
+// are two vectors (containing n numbers) similar?
 template<typename T>
-using complex = std::complex<T>;
+inline static bool Similar(T a, T b, int n, T eps=1.0e-06) {
+  for (int i = 0; i < n; i++)
+    if (not Similar(a[i], b[i], eps))
+      return false;
+  return true;
+}
+
+//Sort the rows of a matrix "evec" by the numbers contained in "eval"
+//(This is a sloppy inneficient O(n^2) sorting method, but usually n is small.)
+template<typename Vector, typename Matrix>
+void SortRows(Vector eval, Matrix evec, int n)
+{
+  for (int i = 0; i < n; i++) {
+    int i_max = i;
+    for (int j = i+1; j < n; j++)
+      if (eval[j] > eval[i_max])
+        i_max = j;
+    std::swap(eval[i], eval[i_max]);
+    for (int k = 0; k < n; k++)
+      std::swap(evec[i][k], evec[i_max][k]);
+  }
+}
+
 
 /// @brief
 /// Generate a random orthogonal n x n matrix
@@ -111,14 +136,19 @@ static inline void MatProduct3(Scalar const* const *A,
 
 
 template <typename Scalar>
-void TestDiagonalization(int n=3
-                         int n_matrices=100,
-                         int n_tests_per_matrix=50)
+void TestJacobi(int n, //<! matrix size
+                int n_matrices=100, //<! number of matrices to test
+                Scalar eval_magnitude_range=1.0, //<! range of eigevalues
+                int n_tests_per_matrix=50) //<! repeat test for benchmarking?
 {
   cout << endl << "-- Diagonalization test (real symmetric)  --" << endl;
 
+  // Convert from base 10 to base e and (divide by 2)
+  eval_magnitude_range *= std::log(10) * 0.5;
+
   Jacobi eigen_calc(n);
 
+  Scalar *evals_known = new Scalar[n];
   Scalar *evals = new Scalar[n];
 
   // construct a trivial random generator engine from a time-based seed:
@@ -137,63 +167,121 @@ void TestDiagonalization(int n=3
   for(int imat = 0; imat < n_matrices; imat++) {
 
     // Randomly generate the eigenvalues
-    // D is the diagonal matrix whose diagonal elements are the eigenvalues
+
+    // D is a diagonal matrix whose diagonal elements are the eigenvalues
     for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++)
         D[i][j] = 0.0;
     for (int i = 0; i < n; i++) {
-      D[i][i] = random_real01();
-      if (D[i][i] != 0.0)
-        //D[i][i] = logarithm of a random number from (0,1]
-        D[i][i] = -std::log(D[i][i]);
+      // generate some random eigenvalues
+      // Use a "log-uniform distribution" (a.k.a. "reciprocal distribution")
+      // (This is a way to specify numbers with a precise range of magnitudes.)
+      Scalar rand_erange = (random_real01()-0.5); // a number between [-0.5,0.5]
+      rand_erange *= eval_magnitude_range; // scale this by eval_magnitude_range
+      evals_known[i] = std::exp(rand_erange);
+      // also consider both positive and negative eigenvalues:
       if (random_real01() < 0.5)
-        D[i][i] = -D[i][i];
+        evals_known[i] = -evals_known[i];
+      D[i][i] = evals_known[i][i];
     }
 
-    // Randomly generate the R and Rt matrices:
+    // Now randomly generate the R and Rt matrices (ie. the eigenvectors):
     GenRandOrth(R, n, generator);
     // Rt is the transpose of R
     for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++)
         Rt[i][j] = R[j][i];
 
-    // Construct the test matrix M = Rt * D * R
+    // Construct the test matrix, M, where M = Rt * D * R
     mmult(Rt, D, tmp, n);
     mmult(tmp, R, M, n);
 
+    // Sort the matrix evals and eigenvector rows
+    SortMatrixRows(R, evals);
+
+    if (n_matrices == 1) {
+      cout << "Eigenvalues (after sorting):\n"
+      for (int i = 0; i < n; i++)
+        cout << evals[i] << " ";
+      cout << "\n";
+      cout << "Eigenvectors (rows) which are known in advance:\n";
+      for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++)
+          cout << R[i][j] << " ";
+        cout << "\n";
+      }
+      cout << "  (The eigenvectors calculated by Jacobi::Diagonalize() should match these.)\n";
+      cout << "\n";
+    }
+
     for (int i_test = 0; i_test < n_tests_per_matrix; i++) {
-      //cout << "Eigenvectors (columns) which are known in advance, Rij = \n";
-      //for (int i = 0; i < n; i++) {
-      //  for (int j = 0; j < n; j++) {
-      //    cout << R[i][j] << " ";
-      //  }
-      //  cout << "\n";
-      //}
-      //cout << "  (The eigenvector should match one of these columns.)\n";
-      //cout << "\n";
 
       // Now, calculate the eigenvalues and eigenvectors
-      eigen_calc.Jacobi(M, eval, Rt);
-      //cout << " --- Results using PEigenCalculator ---\n";
-      //cout << "Eigen value: " << setprecision(16) << eval << endl;
-      //cout << "Eigen vector:";
-      //for(int i = 0;i < n;i++) {
-      //  cout << evec[i] << " ";
-      //}
-      //cout << endl;
+      eigen_calc.Jacobi(M, evals, Rt);
+
+      if ((n_matrices == 1) && (i_test == 0)) {
+        cout << "Eigenvectors calculated by Jacobi::Diagonalize()\n";
+        for (int i = 0; i < n; i++)
+          cout << evals[i] << " ";
+        cout << "\n";
+        cout << "Eigenvectors (rows) which are known in advance, Rij = \n";
+        for (int i = 0; i < n; i++) {
+          for (int j = 0; j < n; j++)
+            cout << Rt[i][j] << " ";
+          cout << "\n";
+        }
+      }
+
+      assert(Similar(evals, evals_known, n));
+      for (int i = 0; i < n; i++)
+        assert(Similar(R[i], Rt[i], n));
 
     } //for (int i_test = 0; i_test < n_tests_per_matrix; i++)
 
   } //for(int imat = 0; imat < n_matrices; imat++) {
 
-
-  
   Dealloc2D(&_M, &M);
   Dealloc2D(&_R, &R);
   Dealloc2D(&_Rt, &Rt);
   Dealloc2D(&_D, &D);
   Dealloc2D(&_tmp, &tmp);
   delete [] evals;
+  delete [] evals_known;
+}
+
+
+int main(int argc, char **argv) {
+  int n_size = 2;
+  int n_matr = 1;
+  int n_tests = 1;
+  Scalar erange = 1.0;
+
+  if (argc <= 1) {
+    cerr <<
+      "Error: This program requires at least 1 arguments.\n"
+      "Usage: n_size [n_matr n_tests erange]\n"
+      "           (The 2nd and 3rd arguments are optional.)\n"
+      "       n_size  = the size of the matrices\n"
+      "       n_matr  = the number of randomly generated matrices to test\n"
+      "       n_tests = the number of times the eigenvalues and eigenvectors\n"
+      "                 are calculated for each matrix.  By default this is 1\n"
+      "                 Increase it to at least 20 if you plan to use this\n"
+      "                 program for benchmarking (speed testing), because the time\n"
+      "                 needed for generating a random matrix is not negligible.\n"
+      "       erange  = the range of eigenvalue magnitudes (log base 10), 1 by default\n"
+         << endl;
+    return 1;
+  }
+
+  n_size = std::stoi(argv[1]);
+  if (argc >= 2)
+    n_matr = std::stoi(argv[2]);
+  if (argc >= 3)
+    erange = std::stof(argv[3]);
+  if (argc >= 4)
+    n_tests = std::stoi(argv[4]);
+
+  TestJacobi(n_size, n_matr, erange, n_tests);
 
   return EXIT_SUCCESS;
 }

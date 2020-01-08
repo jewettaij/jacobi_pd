@@ -16,5 +16,8 @@ matrix:
         - cd tests
         - g++ -std=c++11 -I../include -I../lambda-lanczos/include/lambda_lanczos -o test_superpose3d test.cpp
         #- cppcheck --quiet --error-exitcode=1
-        - ./test_superpose3d
+        - ./test_superpose3d 2 100 3.0
+        - ./test_superpose3d 3 100 3.0
+        - ./test_superpose3d 4 100 3.0
+        - ./test_superpose3d 5 100 3.0
         - cd ../

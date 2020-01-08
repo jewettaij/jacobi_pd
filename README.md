@@ -6,6 +6,13 @@
 jacobi
 ===========
 
+## Development Status: *Planning (pre-alpha)*
+
+WARNING: As of 2019-1-07, this code is incomplete and does not compile.
+(I cannot provide a firm date when this will be ready.)
+
+## Description
+
 This repository contains [***public-domain***](LICENSE.md)
 header-only C++ source code for the
 [Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
@@ -36,10 +43,6 @@ and it only works on dense square real symmetric matrices.
 However you can freely use this humble code anywhere you like.
 Use at your own risk.
 
-
-## Development Status: *Planning (pre-alpha)*
-
-As of 2019-12-28, this code is incomplete and does not compile.
 
 ## Installation
 
