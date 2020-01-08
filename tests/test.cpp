@@ -29,19 +29,19 @@ inline static bool Similar(T a, T b, int n, T eps=1.0e-06) {
   return true;
 }
 
-//Sort the rows of a matrix "evec" by the numbers contained in "eval"
+//Sort the rows of a matrix "M" by the numbers contained in "keys" (also sorted)
 //(This is a sloppy inneficient O(n^2) sorting method, but usually n is small.)
 template<typename Vector, typename Matrix>
-void SortRows(Vector eval, Matrix evec, int n)
+void SortRows(Vector keys, Matrix M, int n)
 {
   for (int i = 0; i < n; i++) {
     int i_max = i;
     for (int j = i+1; j < n; j++)
-      if (eval[j] > eval[i_max])
+      if (keys[j] > keys[i_max])
         i_max = j;
-    std::swap(eval[i], eval[i_max]);
+    std::swap(keys[i], keys[i_max]);
     for (int k = 0; k < n; k++)
-      std::swap(evec[i][k], evec[i_max][k]);
+      std::swap(M[i][k], M[i_max][k]);
   }
 }
 
@@ -197,7 +197,7 @@ void TestJacobi(int n, //<! matrix size
     mmult(tmp, R, M, n);
 
     // Sort the matrix evals and eigenvector rows
-    SortMatrixRows(R, evals);
+    SortRows(evals, R, n);
 
     if (n_matrices == 1) {
       cout << "Eigenvalues (after sorting):\n"

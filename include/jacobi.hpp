@@ -14,7 +14,7 @@ namespace jacobi_public_domain {
 template<typename Scalar>
 static inline Scalar SQR(Scalar x) {return x*x;}
 
-// Sort the rows in M (size nxn) according to the numbers in v (size n)
+// Sort the rows in M (size nxn) according to the numbers in v (size n, sorted)
 template<typename Vector, typename Matrix>
 static inline void SortRows(Vector v, Matrix M, int n);
 
@@ -35,7 +35,6 @@ class Jacobi
   // The next 3 data members store the rotation, translation and scale
   // after optimal superposition
   int *max_index_row;      //!< for each row, store the index of the maximum off-diagonal element
-  bool *underflow;       //!< was this row changed during previous iteration?
   // Precomputed cosine, sin, and tangent of the most recent rotation angle:
   Scalar c;                //!< = cos(θ)
   Scalar s;                //!< = sin(θ)
@@ -71,7 +70,7 @@ public:
               Matrix evec,   //!< store the eigenvectors here (in rows)
               bool sort_decreasing=true, //!< sort eigenvalues decreasing order?
               bool calc_evects=true,     //!< calculate the eigenvectors?
-              int max_num_iters = 50);   //!< limit the number of iterations
+              int max_num_sweeps = 50);  //!< limit the number of iterations
 
 private:
 
@@ -128,7 +127,7 @@ private:
 // -------------- IMPLEMENTATION --------------
 
 
-/// @brief Calculate the components of a rotation matrix which performs a
+/// brief  Calculate the components of a rotation matrix which performs a
 ///        i,j plane by an angle (θ) that (when multiplied on both sides)
 ///        will zero the ij'th element of M, so that afterwards M[i][j] = 0
 ///        (This will also zero M[j][i] since M is assumed to be symmetric.)
@@ -163,11 +162,11 @@ CalcRot(Matrix M,    //!< matrix
 }
 
 
-/// @brief  Perform a similarity transform by multiplying matrix M on both
+/// brief   Perform a similarity transform by multiplying matrix M on both
 ///         sides by a rotation matrix (applying its inverse to the other side)
 ///         This matrix performs a rotation in the i,j plane by angle θ.
-///         Also update the max_index_row[] and underflow[] arrays.
-/// @details This function assumes that i<j and that cos(θ), sin(θ), and tan(θ)
+///         Also update the max_index_row[] array.
+/// details This function assumes that i<j and that cos(θ), sin(θ), and tan(θ)
 ///         have already been computed (by invoking CalcRot()).
 ///         To save time, since the matrix is symmetric, the elements
 ///         below the diagonal (ie. M[u][v] where u>v) are not computed.
@@ -248,50 +247,41 @@ ApplyRot(Matrix M,  //!< matrix
 
   assert(i < j);
 
-  underflow[i] = M[i][i] + M[i][j] == M[i][i];
-  underflow[j] = M[j][j] + M[i][j] == M[j][j];
-
   M[i][j] = 0.0;
 
   // compute M[w][i] and M[i][w] for all w!=i
   for (int w=0; w < i; w++) {           // 0 <= w <  i  <  j < n
     M[w][i] = c*M[w][i] - s*M[w][j];
     if (std::abs(M[w][i]) > max_index_row[w]) max_index_row[w] = i;
-    underflow[w] &= M[w][w] + M[w][i] == M[w][w];
   }
   for (int w=i+1; w < j; w++) {         // 0 <= i <  w  <  j < n
     M[i][w] = c*M[i][w] - s*M[w][j];
     if (std::abs(M[i][w]) > max_index_row[i]) max_index_row[i] = w;
-    underflow[w] &= M[w][w] + M[i][w] == M[w][w];
   }
   for (int w=j+1; w < n; w++) {         // 0 <= i < j+1 <= w < n
     M[i][w] = c*M[i][w] - s*M[j][w];
     if (std::abs(M[i][w]) > max_index_row[i]) max_index_row[i] = w;
-    underflow[w] &= M[w][w] + M[i][w] == M[w][w];
   }
 
   // compute M[w][j] and M[w][j] for all w!=j
   for (int w=0; w < i; w++) {
     M[w][j] = s*M[w][i] + c*M[w][j];    // 0 <=  w  <  i <  j < n
     if (std::abs(M[w][j]) > max_index_row[w]) max_index_row[w] = j;
-    underflow[w] &= M[w][w] + M[w][j] == M[w][w];
   }
   for (int w=i+1; w < j; w++) {
     M[w][j] = s*M[i][w] + c*M[w][j];    // 0 <= i+1 <= w <  j < n
     if (std::abs(M[w][j]) > max_index_row[w]) max_index_row[w] = j;
-    underflow[w] &= M[w][w] + M[w][j] == M[w][w];
   }
   for (int w=j+1; w < n; w++) {
     M[j][w] = s*M[i][w] + c*M[j][w];    // 0 <=  i  <  j <  w < n
     if (std::abs(M[j][w]) > max_index_row[j]) max_index_row[j] = w;
-    underflow[w] &= M[w][w] + M[j][w] == M[w][w];
   }
 }
 
 
 
 
-/// @brief  Multiply matrix M on the RIGHT side only by a rotation matrix.
+/// brief   Multiply matrix M on the RIGHT side only by a rotation matrix.
 ///         This matrix performs a rotation in the i,j plane by angle θ  (where
 ///         the arguments "s" and "c" refer to cos(θ) and sin(θ), respectively).
 /// @code
@@ -360,36 +350,34 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
             Matrix evec,          //!< store the eigenvectors here (in rows)
             bool sort_decreasing, //!< sort eigenvalues decreasing order?
             bool calc_evects,     //!< calculate the eigenvectors?
-            int max_num_iters)    //!< limit the number of iterations
+            int max_num_sweeps)   //!< limit the number of iterations ("sweeps")
 {
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
     //initialize the "max_index_row[]" array (useful for finding the max entry)
     max_index_row[i] = MaxIndexRow(M, i);
-    //initialize the "underflow[]" array (needed to stop iterating)
-    underflow[i] = false;<-CONTINUEHERE: BUG THIS WONT WORK (consider eval[i]=0)
-  }
 
-  int num_iters = 0;
-  bool converged = false;
-  while (! converged) {
-    int i,j;
-    MaxEntry(M, i, j); // find the maximum entry in the matrix, store in i,j
+  int max_num_iters = max_num_sweeps * n * n; //"sweep" = n^2 iters
+  for (int n_iters=0; n_iters < max_num_iters; n_iters++) {
+      int i,j;
+      MaxEntry(M, i, j); // find the maximum entry in the matrix, store in i,j
 
-    CalcRot(M, i, j);  // calculate the parameters of the Givens rotation matrix
-    ApplyRot(M, i, j); // apply this rotation to the M matrix
+      if (M[i][j] == 0.0)
+        break;
 
-    if (calc_evects)   // Optional: If the caller wants the eigenvectors, then
-      ApplyRotRight(evec,i,j); //apply the rotation to the eigenvector matrix.
+      //optional otimization:
+      if ((M[i][i] + M[i][j] == M[i][i]) && (M[j][j] + M[i][j] == M[j][j])) {
+        M[i][j] = 0.0; // if M[i][j] is insignificantly small, set it to 0
+        max_index_row[i] = MaxIndexRow(M, i);//must also update max_index_row[i]
+        continue;
+      }
 
-    converged = true;
-    for (int k=0; k<n; k++)
-      if (! underflow[k])
-        converged = false;
+      CalcRot(M, i, j); //calculate the parameters of the Givens rotation matrix
+      ApplyRot(M, i, j);  //apply this rotation to the M matrix
 
-    num_iters++;
-    if (num_iters > max_num_iters)
-      return true;
-  }
+      if (calc_evects)   //Optional: If the caller wants the eigenvectors, then
+        ApplyRotRight(evec,i,j); //apply the rotation to the eigenvector matrix.
+
+  } //for (int n_iters=0; n_iters < max_num_iters; n_iters++)
 
   for (int i = 0; i < n; i++)
     eval[i] = M[i][i];
@@ -397,7 +385,8 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
   //!< sort eigenvalues decreasing order?
   if (sort_decreasing)
     SortRows(eval, evec, n);
-  return false;
+
+  return (nsweeps == max_num_iters);
 }
 
 
@@ -426,7 +415,6 @@ Init() {
   n = 0;
   M = nullptr;
   max_ind_row = nullptr;
-  underflow = nullptr;
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
@@ -434,8 +422,7 @@ void Jacobi<Scalar, Vector, Matrix>::
 Alloc(int n) {
   this->n = n;
   max_ind_row = new int[n];
-  underflow = new bool[n];
-  assert(_M && M && max_ind_row && underflow);
+  assert(_M && M && max_ind_row);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
@@ -443,8 +430,6 @@ void Jacobi<Scalar, Vector, Matrix>::
 Dealloc() {
   if (max_ind_row)
     delete [] max_ind_row;
-  if (underflow)
-    delete [] underflow;
   Init();
 }
 
@@ -458,16 +443,12 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix>& source)
   std::copy(source.max_ind_row,
             source.max_ind_row + n,
             max_ind_row);
-  std::copy(source.underflow,
-            source.underflow + n,
-            underflow);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 swap(Jacobi<Scalar, Vector, Matrix> &other) {
   std::swap(max_ind_per_atom, other.max_ind_per_atom);
-  std::swap(underflow, other.underflow);
   std::swap(n, other.n);
 }
 
