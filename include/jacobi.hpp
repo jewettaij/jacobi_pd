@@ -30,19 +30,11 @@ class Jacobi
   Scalar s;                //!< = sin(θ)
   Scalar t;                //!< = tan(θ),  (note |t|<=1)
 
-
 public:
-  void SetSize(int matrix_size) {
-    n = matrix_size;
-    Dealloc();
-    Alloc(n);
-  }
 
-  int GetSize() {
-    return n;
-  }
-
-  Jacobi(int matrix_size=0) {
+  /// @brief Specify the size of the matrices you want to diagonalize later.
+  Jacobi(int matrix_size=0 //!< number of rows in the square matrix
+         ) {
     Init();
     SetSize(matrix_size);
   }
@@ -51,8 +43,7 @@ public:
   ///        using the Jacobi eigenvalue algorithm:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
   ///        Return true if the algorithm failed to converge.
-  /// @note  To reduce the computation time (from copying the matrix contents),
-  ///        the contents of the matrix M is modified during the calculation.
+  /// @note  The contents of the matrix M is modified during the calculation.
   /// @note  To reduce the computation time further, set calc_evects=false.
   bool
   Diagonalize(Matrix M,       //!< the matrix you wish to diagonalize (size n)
@@ -68,8 +59,8 @@ private:
   ///        i,j plane by an angle (θ) that (when multiplied on both sides)
   ///        will zero the ij'th element of M, so that afterwards M[i][j] = 0
   ///        (This will also zero M[j][i] since M is assumed to be symmetric.)
-  ///        The results will be stored in the c, s, and t data members
-  ///        (c,s,t store cos(θ), sin(θ), and tan(θ), respectively.)
+  ///        The results will be stored in c, s, and t
+  ///        (which store cos(θ), sin(θ), and tan(θ), respectively).
   void CalcRot(Matrix M,   //!< matrix
                int i,      //!< row index
                int j);     //!< column index
@@ -102,6 +93,7 @@ private:
   void SortRows(Vector eval, Matrix evec, int n) const;
 
   // memory management:
+  void SetSize(int matrix_size);
   void Alloc(int N);
   void Init();
   void Dealloc();
@@ -409,6 +401,14 @@ Init() {
   n = 0;
   M = nullptr;
   max_ind_row = nullptr;
+}
+
+template<typename Scalar, typename Vector, typename Matrix>
+void Jacobi<Scalar, Vector, Matrix>::
+void SetSize(int matrix_size) {
+  n = matrix_size;
+  Dealloc();
+  Alloc(n);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
