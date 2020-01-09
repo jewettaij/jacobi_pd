@@ -7,17 +7,7 @@
 #include <cmath>
 #include <cassert>
 
-
 namespace jacobi_public_domain {
-
-
-template<typename Scalar>
-static inline Scalar SQR(Scalar x) {return x*x;}
-
-// Sort the rows in M (size nxn) according to the numbers in v (size n, sorted)
-template<typename Vector, typename Matrix>
-static inline void SortRows(Vector v, Matrix M, int n);
-
 
 /// @class Jacobi
 /// @brief Calculate the eigenvalues and eigevectors of a symmetric matrix
@@ -107,6 +97,9 @@ private:
   /// @returns void.  After it is invoked, the location of the largest matrix
   ///        element will be stored in the i_max and j_max arguments.
   void MaxEntry(Matrix M, int& i_max, int& j_max) const;
+
+  // Sort the rows in M (size nxn) according to the numbers in v (also, sorted)
+  void SortRows(Vector eval, Matrix evec, int n) const;
 
   // memory management:
   void Alloc(int N);
@@ -393,8 +386,9 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
 
 //Sort the rows of a matrix "evec" by the numbers contained in "eval"
 //(This is a sloppy inneficient O(n^2) sorting method, but usually n is small.)
-template<typename Vector, typename Matrix>
-void SortRows(Vector eval, Matrix evec, int n)
+template<typename Scalar, typename Vector, typename Matrix>
+void Jacobi<Scalar, Vector, Matrix>::
+SortRows(Vector eval, Matrix evec, int n)
 {
   for (int i = 0; i < n; i++) {
     int i_max = i;
