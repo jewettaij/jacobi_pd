@@ -90,7 +90,7 @@ private:
   void MaxEntry(Matrix M, int& i_max, int& j_max) const;
 
   // Sort the rows in M (size nxn) according to the numbers in v (also, sorted)
-  void SortRows(Vector eval, Matrix evec, int n) const;
+  void SortRows(Vector v, Matrix M, int n) const;
 
   // memory management:
   void SetSize(int matrix_size);
@@ -377,7 +377,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
 
 
 //Sort the rows of a matrix "evec" by the numbers contained in "eval"
-//(This is a sloppy inneficient O(n^2) sorting method, but usually n is small.)
+//(This is a simple O(n^2) sorting method, but O(n^2) is a lower bound anyway.)
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 SortRows(Vector eval, Matrix evec, int n)
@@ -387,9 +387,9 @@ SortRows(Vector eval, Matrix evec, int n)
     for (int j = i+1; j < n; j++)
       if (eval[j] > eval[i_max])
         i_max = j;
-    std::swap(eval[i], eval[i_max]);
+    std::swap(eval[i], eval[i_max]); // sort "eval"
     for (int k = 0; k < n; k++)
-      std::swap(evec[i][k], evec[i_max][k]);
+      std::swap(evec[i][k], evec[i_max][k]); // sort "evec"
   }
 }
 

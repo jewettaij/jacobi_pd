@@ -30,7 +30,7 @@ inline static bool Similar(T a, T b, int n, T eps=1.0e-06) {
 }
 
 //Sort the rows of a matrix "M" by the numbers contained in "keys" (also sorted)
-//(This is a sloppy inneficient O(n^2) sorting method, but usually n is small.)
+//(This is a simple O(n^2) sorting method, but O(n^2) is a lower bound anyway.)
 template<typename Vector, typename Matrix>
 void SortRows(Vector keys, Matrix M, int n)
 {
