@@ -138,7 +138,7 @@ static inline void MatProduct3(Scalar const* const *A,
 template <typename Scalar>
 void TestJacobi(int n, //<! matrix size
                 int n_matrices=100, //<! number of matrices to test
-                Scalar eval_magnitude_range=1.0, //<! range of eigevalues
+                Scalar eval_magnitude_range=2.0, //<! range of eigevalues
                 int n_tests_per_matrix=50) //<! repeat test for benchmarking?
 {
   cout << endl << "-- Diagonalization test (real symmetric)  --" << endl;
@@ -254,21 +254,24 @@ int main(int argc, char **argv) {
   int n_size = 2;
   int n_matr = 1;
   int n_tests = 1;
-  Scalar erange = 1.0;
+  Scalar erange = 2.0;
 
   if (argc <= 1) {
     cerr <<
-      "Error: This program requires at least 1 arguments.\n"
+      "Error: This program requires at least 1 argument.\n"
       "Usage: n_size [n_matr n_tests erange]\n"
-      "           (The 2nd and 3rd arguments are optional.)\n"
+      "           (The remaining 3 arguments are optional.)\n"
       "       n_size  = the size of the matrices\n"
       "       n_matr  = the number of randomly generated matrices to test\n"
       "       n_tests = the number of times the eigenvalues and eigenvectors\n"
       "                 are calculated for each matrix.  By default this is 1\n"
-      "                 Increase it to at least 20 if you plan to use this\n"
+      "                 (Increase this to at least 20 if you plan to use this\n"
       "                 program for benchmarking (speed testing), because the time\n"
-      "                 needed for generating a random matrix is not negligible.\n"
-      "       erange  = the range of eigenvalue magnitudes (log base 10), 1 by default\n"
+      "                 needed for generating a random matrix is not negligible.)\n"
+      "       erange  = the range of eigenvalue magnitudes (log base 10)\n"
+      "#                A value of 2 (default) produces eigenvalues in the range from"
+      "                 1.0 up to 10.0 (This is a 2-orders-of-magnitude difference.)"
+      "                 A value of 1 produces eigenvalues from 1/sqrt(10) to sqrt(10)."
          << endl;
     return 1;
   }
