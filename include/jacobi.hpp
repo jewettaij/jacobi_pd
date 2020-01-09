@@ -32,9 +32,9 @@ class Jacobi
 
 public:
 
-  /// @brief Specify the size of the matrices you want to diagonalize later.
-  Jacobi(int matrix_size=0 //!< number of rows in the square matrix
-         ) {
+  /// @brief  Specify the size of the matrices you want to diagonalize later.
+  /// @param matrix_size  the number of rows and columns in the matrices
+  Jacobi(int matrix_size=0)
     Init();
     SetSize(matrix_size);
   }
