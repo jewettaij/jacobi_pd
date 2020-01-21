@@ -1,6 +1,6 @@
 # compiled binaries
 *.so *.o
-test_superpose3d
+test_jacobi
 
 # text-editor temporary files:
 *~
