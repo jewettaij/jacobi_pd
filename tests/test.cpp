@@ -7,8 +7,8 @@
 #include "matrix_alloc.hpp"
 #include "jacobi.hpp"
 
-
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::setprecision;
 using namespace matrix_alloc;
@@ -21,8 +21,8 @@ inline static bool Similar(T a, T b, T eps=1.0e-06) {
 }
 
 // are two vectors (containing n numbers) similar?
-template<typename T>
-inline static bool Similar(T a, T b, int n, T eps=1.0e-06) {
+template<typename Scalar, typename Vector>
+inline static bool SimilarVec(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
   for (int i = 0; i < n; i++)
     if (not Similar(a[i], b[i], eps))
       return false;
@@ -58,11 +58,11 @@ SortRows(Vector eval, Matrix evec, int n, bool sort_absv=false)
 /// Generate a random orthogonal n x n matrix
 template<typename Scalar, typename Matrix>
 void GenRandOrth(Matrix R,
-                 int n)
+                 int n,
+                 std::default_random_engine &generator)
 {
-  if (pgenerator == nullptr)
-    std::default_random_engine generator;
   std::normal_distribution<double> gaussian_distribution(0,1);
+  std::vector<Scalar> v(n);
 
   for (int i = 0; i < n; i++) {
     // Generate a vector, "v", in a random direction subject to the constraint
@@ -72,12 +72,12 @@ void GenRandOrth(Matrix R,
       // Generate a vector in a random direction
       // (This works because we are using a normal (Gaussian) distribution)
       for (int j = 0; j < n; j++)
-        v[j] = gaussian_distribution(*pgenerator);
+        v[j] = gaussian_distribution(generator);
 
       //Now subtract from v, the projection of v onto the first i-1 rows of R.
       //This will produce a vector which is orthogonal to these i-1 row-vectors.
       for (int k = 0; k < i; k++) {
-        Scalar v_dot_Ri = 0.0
+        Scalar v_dot_Ri = 0.0;
           for (int j = 0; j < n; j++)
             v_dot_Ri += v[j] * R[k][j]; // = <v , R[i]>
         for (int j = 0; j < n; j++)
@@ -89,7 +89,7 @@ void GenRandOrth(Matrix R,
         rsq += v[j]*v[j];
     }
     // Now normalize the vector
-    r_inv = 1.0 / std::sqrt(rsq);
+    Scalar r_inv = 1.0 / std::sqrt(rsq);
     for (int j = 0; j < n; j++)
       v[j] *= r_inv;
     // Now copy this vector to the i'th row of R
@@ -155,18 +155,18 @@ void TestJacobi(int n, //<! matrix size
   // Convert from base 10 to base e and (divide by 2)
   eval_magnitude_range *= std::log(10) * 0.5;
 
-  Jacobi eigen_calc(n);
+  Jacobi<double, double*, double**> eigen_calc(n);
 
-  Scalar *evals_known = new Scalar[n];
-  Scalar *evals = new Scalar[n];
+  double *evals_known = new double[n];
+  double *evals = new double[n];
 
   // construct a trivial random generator engine from a time-based seed:
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   std::default_random_engine generator(seed);
-  std::uniform_real_distribution<Scalar> random_real01();
+  std::uniform_real_distribution<double> random_real01;
 
-  Scalar **M, **R, **Rt, **D, **tmp;
-  Scalar *_M, *_R, *_Rt, *_D, *_tmp;
+  double **M, **R, **Rt, **D, **tmp;
+  double *_M, *_R, *_Rt, *_D, *_tmp;
   Alloc2D(n, n, &_M, &M);
   Alloc2D(n, n, &_R, &R);
   Alloc2D(n, n, &_Rt, &Rt);
@@ -185,17 +185,17 @@ void TestJacobi(int n, //<! matrix size
       // generate some random eigenvalues
       // Use a "log-uniform distribution" (a.k.a. "reciprocal distribution")
       // (This is a way to specify numbers with a precise range of magnitudes.)
-      Scalar rand_erange = (random_real01()-0.5); // a number between [-0.5,0.5]
+      double rand_erange = (random_real01(generator)-0.5); // a number between [-0.5,0.5]
       rand_erange *= eval_magnitude_range; // scale this by eval_magnitude_range
       evals_known[i] = std::exp(rand_erange);
       // also consider both positive and negative eigenvalues:
-      if (random_real01() < 0.5)
+      if (random_real01(generator) < 0.5)
         evals_known[i] = -evals_known[i];
-      D[i][i] = evals_known[i][i];
+      D[i][i] = evals_known[i];
     }
 
     // Now randomly generate the R and Rt matrices (ie. the eigenvectors):
-    GenRandOrth(R, n, generator);
+    GenRandOrth<double, double**>(R, n, generator);
     // Rt is the transpose of R
     for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++)
@@ -206,10 +206,10 @@ void TestJacobi(int n, //<! matrix size
     mmult(tmp, R, M, n);
 
     // Sort the matrix evals and eigenvector rows
-    SortRows(evals, R, n);
+    SortRows<double, double*, double**> (evals, R, n);
 
     if (n_matrices == 1) {
-      cout << "Eigenvalues (after sorting):\n"
+      cout << "Eigenvalues (after sorting):\n";
       for (int i = 0; i < n; i++)
         cout << evals[i] << " ";
       cout << "\n";
@@ -223,10 +223,10 @@ void TestJacobi(int n, //<! matrix size
       cout << "\n";
     }
 
-    for (int i_test = 0; i_test < n_tests_per_matrix; i++) {
+    for (int i_test = 0; i_test < n_tests_per_matrix; i_test++) {
 
       // Now, calculate the eigenvalues and eigenvectors
-      eigen_calc.Jacobi(M, evals, Rt);
+      eigen_calc.Diagonalize(M, evals, Rt);
 
       if ((n_matrices == 1) && (i_test == 0)) {
         cout << "Eigenvectors calculated by Jacobi::Diagonalize()\n";
@@ -241,9 +241,9 @@ void TestJacobi(int n, //<! matrix size
         }
       }
 
-      assert(Similar(evals, evals_known, n));
+      assert(SimilarVec(evals, evals_known, n, 1.0e-06));
       for (int i = 0; i < n; i++)
-        assert(Similar(R[i], Rt[i], n));
+        assert(SimilarVec(R[i], Rt[i], n, 1.0e-06));
 
     } //for (int i_test = 0; i_test < n_tests_per_matrix; i++)
 
@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
   int n_size = 2;
   int n_matr = 1;
   int n_tests = 1;
-  Scalar erange = 2.0;
+  double erange = 2.0;
 
   if (argc <= 1) {
     cerr <<

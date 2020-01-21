@@ -6,10 +6,12 @@
 jacobi
 ===========
 
-## Development Status: *Planning (pre-alpha)*
+# Development Status: *Planning (pre-alpha)*
 
-WARNING: As of 2019-1-07, this code is incomplete and does not compile.
-(I cannot provide a firm date when this will be ready.)
+WARNING: As of 2019-1-21, this code compiles,
+but I have not yet had time to begin the debugging process.
+(Once started, it should not take long.)
+
 
 ## Description
 

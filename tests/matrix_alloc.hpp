@@ -2,6 +2,8 @@
 // @brief  Because I allocate 2-dimensional arrays frequently, I created a 
 //         few optional functions that make this more convenient.
 
+#include<cassert>
+
 #ifndef _MATRIX_ALLOC_H
 #define _MATRIX_ALLOC_H
 
@@ -77,5 +79,6 @@ void Dealloc2D(Entry **paX,          //!< pointer to 1-D contiguous-memory array
   }
 }
 
+} // namespace matrix_alloc
 
 #endif //#ifndef _MATRIX_ALLOC_H
