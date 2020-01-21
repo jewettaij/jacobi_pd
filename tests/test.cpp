@@ -29,30 +29,39 @@ inline static bool Similar(T a, T b, int n, T eps=1.0e-06) {
   return true;
 }
 
-//Sort the rows of a matrix "M" by the numbers contained in "keys" (also sorted)
+//Sort the rows of a matrix "evec" by the numbers contained in "eval"
 //(This is a simple O(n^2) sorting method, but O(n^2) is a lower bound anyway.)
-template<typename Vector, typename Matrix>
-void SortRows(Vector keys, Matrix M, int n)
+//This is the same as the Jacobi::SortRows(), but that function is private.
+template<typename Scalar, typename Vector, typename Matrix>
+void
+SortRows(Vector eval, Matrix evec, int n, bool sort_absv=false)
 {
   for (int i = 0; i < n; i++) {
     int i_max = i;
-    for (int j = i+1; j < n; j++)
-      if (keys[j] > keys[i_max])
+    for (int j = i+1; j < n; j++) {
+      if (sort_absv) { //sort by absolute value?
+        if (std::abs(eval[j]) > std::abs(eval[i_max]))
+          i_max = j;
+      }
+      else if (eval[j] > eval[i_max])
         i_max = j;
-    std::swap(keys[i], keys[i_max]);
+    }
+    std::swap(eval[i], eval[i_max]); // sort "eval"
     for (int k = 0; k < n; k++)
-      std::swap(M[i][k], M[i_max][k]);
+      std::swap(evec[i][k], evec[i_max][k]); // sort "evec"
   }
 }
+
 
 
 /// @brief
 /// Generate a random orthogonal n x n matrix
 template<typename Scalar, typename Matrix>
 void GenRandOrth(Matrix R,
-                 int n,
-                 std::default_random_engine &generator=nullptr)
+                 int n)
 {
+  if (pgenerator == nullptr)
+    std::default_random_engine generator;
   std::normal_distribution<double> gaussian_distribution(0,1);
 
   for (int i = 0; i < n; i++) {
@@ -63,7 +72,7 @@ void GenRandOrth(Matrix R,
       // Generate a vector in a random direction
       // (This works because we are using a normal (Gaussian) distribution)
       for (int j = 0; j < n; j++)
-        v[j] = gaussian_distribution(generator);
+        v[j] = gaussian_distribution(*pgenerator);
 
       //Now subtract from v, the projection of v onto the first i-1 rows of R.
       //This will produce a vector which is orthogonal to these i-1 row-vectors.

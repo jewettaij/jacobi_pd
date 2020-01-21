@@ -34,7 +34,7 @@ public:
 
   /// @brief  Specify the size of the matrices you want to diagonalize later.
   /// @param matrix_size  the number of rows and columns in the matrices
-  Jacobi(int matrix_size=0)
+  Jacobi(int matrix_size=0) {
     Init();
     SetSize(matrix_size);
   }
@@ -46,10 +46,11 @@ public:
   /// @note  The contents of the matrix M is modified during the calculation.
   /// @note  To reduce the computation time further, set calc_evects=false.
   bool
-  Diagonalize(Matrix M,       //!< the matrix you wish to diagonalize (size n)
+  Diagonalize(Matrix M,      //!< the matrix you wish to diagonalize (size n)
               Vector eval,   //!< store the eigenvalues here
               Matrix evec,   //!< store the eigenvectors here (in rows)
               bool sort_decreasing=true, //!< sort eigenvalues decreasing order?
+              bool sort_absv=false,      //!< sort by absolutevalue of eigenval?
               bool calc_evects=true,     //!< calculate the eigenvectors?
               int max_num_sweeps = 50);  //!< limit the number of iterations
 
@@ -90,7 +91,7 @@ private:
   void MaxEntry(Matrix M, int& i_max, int& j_max) const;
 
   // Sort the rows in M (size nxn) according to the numbers in v (also, sorted)
-  void SortRows(Vector v, Matrix M, int n) const;
+  void SortRows(Vector v, Matrix M, int n, bool sort_absv=false) const;
 
   // memory management:
   void SetSize(int matrix_size);
@@ -129,7 +130,7 @@ CalcRot(Matrix M,    //!< matrix
     // kappa = (M[j][j] - M[i][i]) / (2*M[i][j])
     Scalar kappa = M_jj_ii;
     t = 0.0;
-    M_ij = M[i][j];
+    Scalar M_ij = M[i][j];
     if (M_ij != 0.0) {
       kappa /= (2.0*M_ij);
       // t satisfies: t^2 + 2*t*kappa - 1 = 0
@@ -289,10 +290,10 @@ ApplyRotRight(Matrix E,  //!< matrix
 
 
 template<typename Scalar, typename Vector, typename Matrix>
-void Jacobi<Scalar, Vector, Matrix>::
+int Jacobi<Scalar, Vector, Matrix>::
 MaxIndexRow(Matrix M, int i) const {
   int j_max = i+1;
-  for(int j = i+2; j < n)
+  for(int j = i+2; j < n; j++)
     if (std::abs(M[i][j]) > std::abs(M[i][j_max]))
       j_max = j;
   assert(j_max > i);
@@ -309,7 +310,7 @@ MaxEntry(Matrix M, int& i_max, int& j_max) const {
   i_max = 0;
   j_max = 0;
   for (int i=0; i < n; i++) {
-    j = max_index_row[i];
+    int j = max_index_row[i];
     if (std::abs(M[i][j]) > max_entry) {
       max_entry = std::abs(M[i][j]);
       i_max = i;
@@ -334,32 +335,34 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
             Vector eval,          //!< store the eigenvalues here
             Matrix evec,          //!< store the eigenvectors here (in rows)
             bool sort_decreasing, //!< sort eigenvalues decreasing order?
+            bool sort_absv,       //!< sort by absolute value of eigenvalues?
             bool calc_evects,     //!< calculate the eigenvectors?
             int max_num_sweeps)   //!< limit the number of iterations ("sweeps")
 {
   for (int i = 0; i < n; i++)
-    //initialize the "max_index_row[]" array (useful for finding the max entry)
+    //Initialize the "max_index_row[]" array (useful for finding the max entry)
     max_index_row[i] = MaxIndexRow(M, i);
 
+  int n_iters;
   int max_num_iters = max_num_sweeps * n * n; //"sweep" = n^2 iters
-  for (int n_iters=0; n_iters < max_num_iters; n_iters++) {
+  for (n_iters=0; n_iters < max_num_iters; n_iters++) {
       int i,j;
-      MaxEntry(M, i, j); // find the maximum entry in the matrix, store in i,j
+      MaxEntry(M, i, j); // Find the maximum entry in the matrix. Store in i,j
 
       if (M[i][j] == 0.0)
         break;
 
-      //optional otimization:
       if ((M[i][i] + M[i][j] == M[i][i]) && (M[j][j] + M[i][j] == M[j][j])) {
-        M[i][j] = 0.0; // if M[i][j] is insignificantly small, set it to 0
+        // If M[i][j] is small compared to M[i][i] and M[j][j], set it to 0.
+        M[i][j] = 0.0;
         max_index_row[i] = MaxIndexRow(M, i);//must also update max_index_row[i]
         continue;
       }
 
-      CalcRot(M, i, j); //calculate the parameters of the Givens rotation matrix
-      ApplyRot(M, i, j);  //apply this rotation to the M matrix
+      CalcRot(M, i, j);  // Calculate the parameters of the rotation matrix.
+      ApplyRot(M, i, j); // Apply this rotation to the M matrix.
 
-      if (calc_evects)   //Optional: If the caller wants the eigenvectors, then
+      if (calc_evects)   // Optional: If the caller wants the eigenvectors, then
         ApplyRotRight(evec,i,j); //apply the rotation to the eigenvector matrix.
 
   } //for (int n_iters=0; n_iters < max_num_iters; n_iters++)
@@ -367,11 +370,11 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
   for (int i = 0; i < n; i++)
     eval[i] = M[i][i];
 
-  //!< sort eigenvalues decreasing order?
+  // Sort eigenvalues and eigenvectors in decreasing order?
   if (sort_decreasing)
-    SortRows(eval, evec, n);
+    SortRows(eval, evec, n, sort_absv);
 
-  return (nsweeps == max_num_iters);
+  return (n_iters == max_num_iters); // returns true if failed to converge
 }
 
 
@@ -380,13 +383,18 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
 //(This is a simple O(n^2) sorting method, but O(n^2) is a lower bound anyway.)
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
-SortRows(Vector eval, Matrix evec, int n)
+SortRows(Vector eval, Matrix evec, int n, bool sort_absv) const
 {
   for (int i = 0; i < n; i++) {
     int i_max = i;
-    for (int j = i+1; j < n; j++)
-      if (eval[j] > eval[i_max])
+    for (int j = i+1; j < n; j++) {
+      if (sort_absv) { //sort by absolute value?
+        if (std::abs(eval[j]) > std::abs(eval[i_max]))
+          i_max = j;
+      }
+      else if (eval[j] > eval[i_max])
         i_max = j;
+    }
     std::swap(eval[i], eval[i_max]); // sort "eval"
     for (int k = 0; k < n; k++)
       std::swap(evec[i][k], evec[i_max][k]); // sort "evec"
@@ -399,13 +407,12 @@ template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 Init() {
   n = 0;
-  M = nullptr;
-  max_ind_row = nullptr;
+  max_index_row = nullptr;
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
-void SetSize(int matrix_size) {
+SetSize(int matrix_size) {
   n = matrix_size;
   Dealloc();
   Alloc(n);
@@ -415,15 +422,15 @@ template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 Alloc(int n) {
   this->n = n;
-  max_ind_row = new int[n];
-  assert(_M && M && max_ind_row);
+  max_index_row = new int[n];
+  assert(max_index_row);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 Dealloc() {
-  if (max_ind_row)
-    delete [] max_ind_row;
+  if (max_index_row)
+    delete [] max_index_row;
   Init();
 }
 
@@ -434,22 +441,22 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix>& source)
   Init();
   Alloc(source.n);
   assert(n == source.n);
-  std::copy(source.max_ind_row,
-            source.max_ind_row + n,
-            max_ind_row);
+  std::copy(source.max_index_row,
+            source.max_index_row + n,
+            max_index_row);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 swap(Jacobi<Scalar, Vector, Matrix> &other) {
-  std::swap(max_ind_per_atom, other.max_ind_per_atom);
+  std::swap(max_index_row, other.max_index_row);
   std::swap(n, other.n);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
 Jacobi<Scalar, Vector, Matrix>&
 Jacobi<Scalar, Vector, Matrix>::
-operator = (Jacobi<Scalar, Vector, Matrix>y source) {
+operator = (Jacobi<Scalar, Vector, Matrix> source) {
   this->swap(source);
   return *this;
 }
