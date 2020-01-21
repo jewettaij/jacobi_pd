@@ -39,6 +39,14 @@ public:
     SetSize(matrix_size);
   }
 
+  typedef enum eSortCriteria {
+    DO_NOT_SORT,
+    SORT_DECREASING_EVALS,
+    SORT_INCREASING_EVALS,
+    SORT_DECREASING_ABS_EVALS,
+    SORT_INCREASING_ABS_EVALS
+  } SortCriteria;
+
   /// @brief Calculate the eigenvalues and eigevectors of a symmetric matrix
   ///        using the Jacobi eigenvalue algorithm:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
@@ -49,8 +57,7 @@ public:
   Diagonalize(Matrix M,      //!< the matrix you wish to diagonalize (size n)
               Vector eval,   //!< store the eigenvalues here
               Matrix evec,   //!< store the eigenvectors here (in rows)
-              bool sort_decreasing=true, //!< sort eigenvalues decreasing order?
-              bool sort_absv=false,      //!< sort by absolutevalue of eigenval?
+              SortCriteria sort_criteria=SORT_DECREASING_EVALS,//!<sort results?
               bool calc_evects=true,     //!< calculate the eigenvectors?
               int max_num_sweeps = 50);  //!< limit the number of iterations
 
@@ -90,8 +97,12 @@ private:
   ///        element will be stored in the i_max and j_max arguments.
   void MaxEntry(Matrix M, int& i_max, int& j_max) const;
 
-  // Sort the rows in M (size nxn) according to the numbers in v (also, sorted)
-  void SortRows(Vector v, Matrix M, int n, bool sort_absv=false) const;
+  // @brief Sort the rows in M according to the numbers in v (also sorted)
+  void SortRows(Vector v, //!< vector containing the keys used for sorting
+                Matrix M, //!< matrix whose rows will be sorted according to v
+                int n,    //!< size of the vector and matrix
+                SortCriteria s=SORT_DECREASING_EVALS //!< sort decreasing order?
+                ) const;
 
   // memory management:
   void SetSize(int matrix_size);
@@ -334,8 +345,7 @@ bool Jacobi<Scalar, Vector, Matrix>::
 Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
             Vector eval,          //!< store the eigenvalues here
             Matrix evec,          //!< store the eigenvectors here (in rows)
-            bool sort_decreasing, //!< sort eigenvalues decreasing order?
-            bool sort_absv,       //!< sort by absolute value of eigenvalues?
+            SortCriteria sort_criteria, //!<sort results?
             bool calc_evects,     //!< calculate the eigenvectors?
             int max_num_sweeps)   //!< limit the number of iterations ("sweeps")
 {
@@ -344,7 +354,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
     max_index_row[i] = MaxIndexRow(M, i);
 
   int n_iters;
-  int max_num_iters = max_num_sweeps * n * n; //"sweep" = n^2 iters
+  int max_num_iters = max_num_sweeps*n*(n+1)/2; //"sweep" = n*(n+1)/2 iters
   for (n_iters=0; n_iters < max_num_iters; n_iters++) {
       int i,j;
       MaxEntry(M, i, j); // Find the maximum entry in the matrix. Store in i,j
@@ -370,9 +380,9 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
   for (int i = 0; i < n; i++)
     eval[i] = M[i][i];
 
-  // Sort eigenvalues and eigenvectors in decreasing order?
-  if (sort_decreasing)
-    SortRows(eval, evec, n, sort_absv);
+  // Sort eigenvalues and eigenvectors?
+  if (sort_criteria != DO_NOT_SORT)
+    SortRows(eval, evec, n, sort_criteria);
 
   return (n_iters == max_num_iters); // returns true if failed to converge
 }
@@ -380,20 +390,33 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
 
 
 //Sort the rows of a matrix "evec" by the numbers contained in "eval"
-//(This is a simple O(n^2) sorting method, but O(n^2) is a lower bound anyway.)
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
-SortRows(Vector eval, Matrix evec, int n, bool sort_absv) const
+SortRows(Vector eval, Matrix evec, int n, SortCriteria sort_criteria) const
 {
   for (int i = 0; i < n; i++) {
     int i_max = i;
     for (int j = i+1; j < n; j++) {
-      if (sort_absv) { //sort by absolute value?
+      // find the "maximum" element in the array starting at position i+1
+      switch (sort_criteria) {
+      case SORT_DECREASING_EVALS:
+        if (eval[j] > eval[i_max])
+          i_max = j;
+      case SORT_INCREASING_EVALS:
+        if (eval[j] < eval[i_max])
+          i_max = j;
+      case SORT_DECREASING_ABS_EVALS:
         if (std::abs(eval[j]) > std::abs(eval[i_max]))
           i_max = j;
+        break;
+      case SORT_INCREASING_ABS_EVALS:
+        if (std::abs(eval[j]) < std::abs(eval[i_max]))
+          i_max = j;
+        break;
+      default:
+        assert(false);
+        break;
       }
-      else if (eval[j] > eval[i_max])
-        i_max = j;
     }
     std::swap(eval[i], eval[i_max]); // sort "eval"
     for (int k = 0; k < n; k++)
