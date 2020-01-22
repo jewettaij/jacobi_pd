@@ -226,14 +226,15 @@ void TestJacobi(int n, //<! matrix size
     for (int i_test = 0; i_test < n_tests_per_matrix; i_test++) {
 
       // Now, calculate the eigenvalues and eigenvectors
-      eigen_calc.Diagonalize(M, evals, Rt);
+      int n_sweeps = eigen_calc.Diagonalize(M, evals, Rt);
 
       if ((n_matrices == 1) && (i_test == 0)) {
-        cout << "Eigenvectors calculated by Jacobi::Diagonalize()\n";
+        cout <<"Jacobi::Diagonalize() ran for "<<n_sweeps<<" iters (sweeps).\n";
+        cout << "Eigenvalues calculated by Jacobi::Diagonalize()\n";
         for (int i = 0; i < n; i++)
           cout << evals[i] << " ";
         cout << "\n";
-        cout << "Eigenvectors (rows) which are known in advance, Rij = \n";
+        cout << "Eigenvectors calculated by Jacobi::Diagonalize()\n";
         for (int i = 0; i < n; i++) {
           for (int j = 0; j < n; j++)
             cout << Rt[i][j] << " ";
