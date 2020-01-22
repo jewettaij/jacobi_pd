@@ -206,12 +206,12 @@ void TestJacobi(int n, //<! matrix size
     mmult(tmp, R, M, n);
 
     // Sort the matrix evals and eigenvector rows
-    SortRows<double, double*, double**> (evals, R, n);
+    SortRows<double, double*, double**> (evals_known, R, n);
 
     if (n_matrices == 1) {
       cout << "Eigenvalues (after sorting):\n";
       for (int i = 0; i < n; i++)
-        cout << evals[i] << " ";
+        cout << evals_known[i] << " ";
       cout << "\n";
       cout << "Eigenvectors (rows) which are known in advance:\n";
       for (int i = 0; i < n; i++) {
@@ -220,7 +220,6 @@ void TestJacobi(int n, //<! matrix size
         cout << "\n";
       }
       cout << "  (The eigenvectors calculated by Jacobi::Diagonalize() should match these.)\n";
-      cout << "\n";
     }
 
     for (int i_test = 0; i_test < n_tests_per_matrix; i_test++) {

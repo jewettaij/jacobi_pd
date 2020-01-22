@@ -353,7 +353,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
             bool calc_evects,     //!< calculate the eigenvectors?
             int max_num_sweeps)   //!< limit the number of iterations ("sweeps")
 {
-  for (int i = 0; i < n; i++)
+  for (int i = 0; i < n-1; i++)
     //Initialize the "max_indx_rw[]" array (useful for finding the max entry)
     max_indx_rw[i] = MaxEntryRow(M, i);
 
