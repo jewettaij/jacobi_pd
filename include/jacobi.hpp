@@ -24,7 +24,7 @@ class Jacobi
   int n;                   //!< the size of the matrix
   // The next 3 data members store the rotation, translation and scale
   // after optimal superposition
-  int *max_index_row;      //!< for each row, store the index of the maximum off-diagonal element
+  int *max_indx_rw;      //!< for each row, store the index of the maximum off-diagonal element
   // Precomputed cosine, sin, and tangent of the most recent rotation angle:
   Scalar c;                //!< = cos(θ)
   Scalar s;                //!< = sin(θ)
@@ -52,7 +52,7 @@ public:
   ///        using the Jacobi eigenvalue algorithm:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
   ///        Return true if the algorithm failed to converge.
-  /// @returns The number_of_sweeps (= number_of_iterations / (n*(n+1)/2)).
+  /// @returns The number_of_sweeps (= number_of_iterations / (n*(n-1)/2)).
   ///          If this equals max_num_sweeps, the algorithm failed to converge.
   /// @note  The contents of the matrix M is modified during the calculation.
   /// @note  To reduce the computation time further, set calc_evects=false.
@@ -91,11 +91,11 @@ private:
                      int j);    //!< column index
 
   ///@brief Find the off-diagonal index in row i whose absolute value is largest
-  int MaxIndexRow(Matrix M, int i) const;
+  int MaxEntryRow(Matrix M, int i) const;
 
   /// @brief Find the indices (i_max, j_max) marking the location of the
   ///        entry in the matrix with the largest absolute value.  This
-  ///        exploits the max_index_row[] array to find the answer in O(n) time.
+  ///        exploits the max_indx_rw[] array to find the answer in O(n) time.
   /// @returns void.  After it is invoked, the location of the largest matrix
   ///        element will be stored in the i_max and j_max arguments.
   void MaxEntry(Matrix M, int& i_max, int& j_max) const;
@@ -165,7 +165,7 @@ CalcRot(Matrix M,    //!< matrix
 /// brief   Perform a similarity transform by multiplying matrix M on both
 ///         sides by a rotation matrix (applying its inverse to the other side)
 ///         This matrix performs a rotation in the i,j plane by angle θ.
-///         Also update the max_index_row[] array.
+///         Also update the max_indx_rw[] array.
 /// details This function assumes that i<j and that cos(θ), sin(θ), and tan(θ)
 ///         have already been computed (by invoking CalcRot()).
 ///         To save time, since the matrix is symmetric, the elements
@@ -198,8 +198,8 @@ CalcRot(Matrix M,    //!< matrix
 /// elements containing at least one index which is either i or j
 /// such as: M[w][i], M[i][w], M[w][j], M[j][w].
 /// Check and see whether these modified matrix elements exceed the 
-/// corresponding values in max_index_row[] array for that row.
-/// If so, then update max_index_row for that row.
+/// corresponding values in max_indx_rw[] array for that row.
+/// If so, then update max_indx_rw for that row.
 /// This is somewhat complicated by the fact that we must only consider
 /// matrix elements in the upper-right triangle strictly above the diagonal.
 /// (ie. matrix elements whose second index is > the first index).
@@ -252,29 +252,29 @@ ApplyRot(Matrix M,  //!< matrix
   // compute M[w][i] and M[i][w] for all w!=i
   for (int w=0; w < i; w++) {           // 0 <= w <  i  <  j < n
     M[w][i] = c*M[w][i] - s*M[w][j];
-    if (std::abs(M[w][i]) > std::abs(M[w][max_index_row[w]])) max_index_row[w] = i;
+    if (std::abs(M[w][i]) > std::abs(M[w][max_indx_rw[w]])) max_indx_rw[w] = i;
   }
   for (int w=i+1; w < j; w++) {         // 0 <= i <  w  <  j < n
     M[i][w] = c*M[i][w] - s*M[w][j];
-    if (std::abs(M[i][w]) > std::abs(M[i][max_index_row[i]])) max_index_row[i] = w;
+    if (std::abs(M[i][w]) > std::abs(M[i][max_indx_rw[i]])) max_indx_rw[i] = w;
   }
   for (int w=j+1; w < n; w++) {         // 0 <= i < j+1 <= w < n
     M[i][w] = c*M[i][w] - s*M[j][w];
-    if (std::abs(M[i][w]) > max_index_row[i]) max_index_row[i] = w;
+    if (std::abs(M[i][w]) > std::abs(M[i][max_indx_rw[i]])) max_indx_rw[i] = w;
   }
 
   // compute M[w][j] and M[w][j] for all w!=j
   for (int w=0; w < i; w++) {
     M[w][j] = s*M[w][i] + c*M[w][j];    // 0 <=  w  <  i <  j < n
-    if (std::abs(M[w][j]) > max_index_row[w]) max_index_row[w] = j;
+    if (std::abs(M[w][j]) > std::abs(M[w][max_indx_rw[w]])) max_indx_rw[w] = j;
   }
   for (int w=i+1; w < j; w++) {
     M[w][j] = s*M[i][w] + c*M[w][j];    // 0 <= i+1 <= w <  j < n
-    if (std::abs(M[w][j]) > max_index_row[w]) max_index_row[w] = j;
+    if (std::abs(M[w][j]) > std::abs(M[w][max_indx_rw[w]])) max_indx_rw[w] = j;
   }
   for (int w=j+1; w < n; w++) {
     M[j][w] = s*M[i][w] + c*M[j][w];    // 0 <=  i  <  j <  w < n
-    if (std::abs(M[j][w]) > max_index_row[j]) max_index_row[j] = w;
+    if (std::abs(M[j][w]) > std::abs(M[j][max_indx_rw[j]])) max_indx_rw[j] = w;
   }
 }
 
@@ -305,12 +305,12 @@ ApplyRotRight(Matrix E,  //!< matrix
 
 template<typename Scalar, typename Vector, typename Matrix>
 int Jacobi<Scalar, Vector, Matrix>::
-MaxIndexRow(Matrix M, int i) const {
+MaxEntryRow(Matrix M, int i) const {
+  assert(i < n-1);
   int j_max = i+1;
   for(int j = i+2; j < n; j++)
     if (std::abs(M[i][j]) > std::abs(M[i][j_max]))
       j_max = j;
-  assert(j_max > i);
   return j_max;
 }
 
@@ -320,12 +320,12 @@ template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 MaxEntry(Matrix M, int& i_max, int& j_max) const {
   // find the maximum entry in the matrix M in O(n) time
-  Scalar max_entry = 0.0;
-  i_max = 0;
-  j_max = 0;
+  i_max = 0; // (start with an arbitrary
+  j_max = 1; //  off-diagonal element: M[0][1])
+  Scalar max_entry = std::abs(M[i_max][j_max]);
   int nm1 = n-1;
   for (int i=0; i < nm1; i++) {
-    int j = max_index_row[i];
+    int j = max_indx_rw[i];
     if (std::abs(M[i][j]) > max_entry) {
       max_entry = std::abs(M[i][j]);
       i_max = i;
@@ -354,11 +354,11 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
             int max_num_sweeps)   //!< limit the number of iterations ("sweeps")
 {
   for (int i = 0; i < n; i++)
-    //Initialize the "max_index_row[]" array (useful for finding the max entry)
-    max_index_row[i] = MaxIndexRow(M, i);
+    //Initialize the "max_indx_rw[]" array (useful for finding the max entry)
+    max_indx_rw[i] = MaxEntryRow(M, i);
 
   int n_iters;                                  // number of pivots chosen
-  int max_num_iters = max_num_sweeps*n*(n+1)/2; //"sweep" = n*(n+1)/2 iters
+  int max_num_iters = max_num_sweeps*n*(n-1)/2; //"sweep" = n*(n-1)/2 iters
   for (n_iters=0; n_iters < max_num_iters; n_iters++) {
     int i,j;
     MaxEntry(M, i, j); // Find the maximum entry in the matrix. Store in i,j
@@ -369,7 +369,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
     if ((M[i][i] + M[i][j] == M[i][i]) && (M[j][j] + M[i][j] == M[j][j])) {
       // If M[i][j] is small compared to M[i][i] and M[j][j], set it to 0.
       M[i][j] = 0.0;
-      max_index_row[i] = MaxIndexRow(M, i);//must also update max_index_row[i]
+      max_indx_rw[i] = MaxEntryRow(M, i);//must also update max_indx_rw[i]
       continue;
     }
 
@@ -388,7 +388,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
   if (sort_criteria != DO_NOT_SORT)
     SortRows(eval, evec, n, sort_criteria);
 
-  return n_iters / (n*(n+1)/2); //returns the number of "sweeps" (converged?)
+  return n_iters / (n*(n-1)/2); //returns the number of "sweeps" (converged?)
 }
 
 
@@ -434,7 +434,7 @@ template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 Init() {
   n = 0;
-  max_index_row = nullptr;
+  max_indx_rw = nullptr;
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
@@ -448,15 +448,15 @@ template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 Alloc(int n) {
   this->n = n;
-  max_index_row = new int[n];
-  assert(max_index_row);
+  max_indx_rw = new int[n];
+  assert(max_indx_rw);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 Dealloc() {
-  if (max_index_row)
-    delete [] max_index_row;
+  if (max_indx_rw)
+    delete [] max_indx_rw;
   Init();
 }
 
@@ -467,15 +467,15 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix>& source)
   Init();
   Alloc(source.n);
   assert(n == source.n);
-  std::copy(source.max_index_row,
-            source.max_index_row + n,
-            max_index_row);
+  std::copy(source.max_indx_rw,
+            source.max_indx_rw + n,
+            max_indx_rw);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 swap(Jacobi<Scalar, Vector, Matrix> &other) {
-  std::swap(max_index_row, other.max_index_row);
+  std::swap(max_indx_rw, other.max_indx_rw);
   std::swap(n, other.n);
 }
 
