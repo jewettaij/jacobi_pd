@@ -148,12 +148,10 @@ CalcRot(Matrix M,    //!< matrix
     if (M_ij != 0.0) {
       kappa /= (2.0*M_ij);
       // t satisfies: t^2 + 2*t*kappa - 1 = 0
-      // -->  t = -kappa +/- sqrt(1+kappa^2)
       // (choose the root which has the smaller absolute value)
-      t = std::sqrt(1 + kappa*kappa);
+      t = 1.0 / (std::sqrt(1 + kappa*kappa) + std::abs(kappa));
       if (kappa < 0.0)
         t = -t;
-      t -= kappa;
     }
   }
   assert(std::abs(t) <= 1.0);
@@ -251,29 +249,35 @@ ApplyRot(Matrix M,  //!< matrix
 
   // compute M[w][i] and M[i][w] for all w!=i
   for (int w=0; w < i; w++) {           // 0 <= w <  i  <  j < n
+    M[i][w] = M[w][i]; //backup the previous value (needed later) below diagonal
     M[w][i] = c*M[w][i] - s*M[w][j];
     if (std::abs(M[w][i]) > std::abs(M[w][max_indx_rw[w]])) max_indx_rw[w] = i;
   }
   for (int w=i+1; w < j; w++) {         // 0 <= i <  w  <  j < n
+    M[w][i] = M[i][w]; //backup the previous value (needed later) below diagonal
     M[i][w] = c*M[i][w] - s*M[w][j];
     if (std::abs(M[i][w]) > std::abs(M[i][max_indx_rw[i]])) max_indx_rw[i] = w;
   }
   for (int w=j+1; w < n; w++) {         // 0 <= i < j+1 <= w < n
+    M[w][i] = M[i][w]; //backup the previous value (needed later) below diagonal
     M[i][w] = c*M[i][w] - s*M[j][w];
     if (std::abs(M[i][w]) > std::abs(M[i][max_indx_rw[i]])) max_indx_rw[i] = w;
   }
 
   // compute M[w][j] and M[w][j] for all w!=j
-  for (int w=0; w < i; w++) {
-    M[w][j] = s*M[w][i] + c*M[w][j];    // 0 <=  w  <  i <  j < n
+  for (int w=0; w < i; w++) {    // 0 <=  w  <  i <  j < n
+    //M[w][j] = s*M[w][i] + c*M[w][j];
+    M[w][j] = s*M[i][w] + c*M[w][j]; //Note:M[w][i] was updated, M[i][w] is not
     if (std::abs(M[w][j]) > std::abs(M[w][max_indx_rw[w]])) max_indx_rw[w] = j;
   }
-  for (int w=i+1; w < j; w++) {
-    M[w][j] = s*M[i][w] + c*M[w][j];    // 0 <= i+1 <= w <  j < n
+  for (int w=i+1; w < j; w++) {    // 0 <= i+1 <= w <  j < n
+    //M[w][j] = s*M[i][w] + c*M[w][j];
+    M[w][j] = s*M[w][i] + c*M[w][j]; //Note:M[i][w] was updated, M[w][i] is not
     if (std::abs(M[w][j]) > std::abs(M[w][max_indx_rw[w]])) max_indx_rw[w] = j;
   }
-  for (int w=j+1; w < n; w++) {
-    M[j][w] = s*M[i][w] + c*M[j][w];    // 0 <=  i  <  j <  w < n
+  for (int w=j+1; w < n; w++) {    // 0 <=  i  <  j <  w < n
+    //M[j][w] = s*M[i][w] + c*M[j][w];
+    M[j][w] = s*M[w][i] + c*M[j][w]; //Note:M[i][w] was updated, M[w][i] is not
     if (std::abs(M[j][w]) > std::abs(M[j][max_indx_rw[j]])) max_indx_rw[j] = w;
   }
 }
