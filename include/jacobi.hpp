@@ -392,7 +392,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
   if (sort_criteria != DO_NOT_SORT)
     SortRows(eval, evec, n, sort_criteria);
 
-  return n_iters / (n*(n-1)/2); //returns the number of "sweeps" (converged?)
+  return 1+(n_iters-1)/(n*(n-1)/2); //returns the number of "sweeps"(converged?)
 }
 
 
