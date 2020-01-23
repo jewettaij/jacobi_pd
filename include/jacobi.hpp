@@ -62,7 +62,7 @@ public:
               Matrix evec,   //!< store the eigenvectors here (in rows)
               SortCriteria sort_criteria=SORT_DECREASING_EVALS,//!<sort results?
               bool calc_evects=true,     //!< calculate the eigenvectors?
-              int max_num_sweeps = 50);  //!< limit the number of iterations
+              int max_num_sweeps = 60);  //!< limit the number of iterations
 
 private:
 
@@ -392,7 +392,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
   if (sort_criteria != DO_NOT_SORT)
     SortRows(eval, evec, n, sort_criteria);
 
-  return 1+(n_iters-1)/(n*(n-1)/2); //returns the number of "sweeps"(converged?)
+  return n_iters / (n*(n-1)/2); //returns the number of "sweeps"(converged?)
 }
 
 
@@ -410,9 +410,11 @@ SortRows(Vector eval, Matrix evec, int n, SortCriteria sort_criteria) const
       case SORT_DECREASING_EVALS:
         if (eval[j] > eval[i_max])
           i_max = j;
+        break;
       case SORT_INCREASING_EVALS:
         if (eval[j] < eval[i_max])
           i_max = j;
+        break;
       case SORT_DECREASING_ABS_EVALS:
         if (std::abs(eval[j]) > std::abs(eval[i_max]))
           i_max = j;

@@ -225,6 +225,12 @@ void TestJacobi(int n, //<! matrix size
     for (int i_test = 0; i_test < n_tests_per_matrix; i_test++) {
 
       // Now, calculate the eigenvalues and eigenvectors
+      M[0][0]=0.65; //<-- CONTINUEHERE: for debugging only.  remove later!
+      M[0][1]=0.53; //<-- CONTINUEHERE: for debugging only.  remove later!
+      M[0][2]=0.11; //<-- CONTINUEHERE: for debugging only.  remove later!
+      M[1][1]=0.5;  //<-- CONTINUEHERE: for debugging only.  remove later!
+      M[1][2]=0.15; //<-- CONTINUEHERE: for debugging only.  remove later!
+      M[2][2]=0.1;  //<-- CONTINUEHERE: for debugging only.  remove later!
       int n_sweeps = eigen_calc.Diagonalize(M, evals, Rt);
 
       if ((n_matrices == 1) && (i_test == 0)) {
