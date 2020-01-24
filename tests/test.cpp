@@ -76,12 +76,13 @@ void GenRandOrth(Matrix R,
 
       //Now subtract from v, the projection of v onto the first i-1 rows of R.
       //This will produce a vector which is orthogonal to these i-1 row-vectors.
+      //(They are already normalized and orthogonal to each other.)
       for (int k = 0; k < i; k++) {
-        Scalar v_dot_Ri = 0.0;
+        Scalar v_dot_Rk = 0.0;
           for (int j = 0; j < n; j++)
-            v_dot_Ri += v[j] * R[k][j]; // = <v , R[i]>
+            v_dot_Rk += v[j] * R[k][j];
         for (int j = 0; j < n; j++)
-          v[j] -= v_dot_Ri * R[i][j]; // = v - <V,R[i]> R[i]
+          v[j] -= v_dot_Rk * R[k][j];
       }
       // check if it is linearly independent of the other vectors and non-zero
       rsq = 0.0;
@@ -238,12 +239,12 @@ void TestJacobi(int n, //<! matrix size
     for (int i_test = 0; i_test < n_tests_per_matrix; i_test++) {
 
       // Now, calculate the eigenvalues and eigenvectors
-      M[0][0]=0.65; //<-- CONTINUEHERE: for debugging only.  remove later!
-      M[0][1]=0.53; //<-- CONTINUEHERE: for debugging only.  remove later!
-      M[0][2]=0.11; //<-- CONTINUEHERE: for debugging only.  remove later!
-      M[1][1]=0.5;  //<-- CONTINUEHERE: for debugging only.  remove later!
-      M[1][2]=0.15; //<-- CONTINUEHERE: for debugging only.  remove later!
-      M[2][2]=0.1;  //<-- CONTINUEHERE: for debugging only.  remove later!
+      //M[0][0]=0.65; //<-- CONTINUEHERE: for debugging only.  remove later!
+      //M[0][1]=0.53; //<-- CONTINUEHERE: for debugging only.  remove later!
+      //M[0][2]=0.11; //<-- CONTINUEHERE: for debugging only.  remove later!
+      //M[1][1]=0.5;  //<-- CONTINUEHERE: for debugging only.  remove later!
+      //M[1][2]=0.15; //<-- CONTINUEHERE: for debugging only.  remove later!
+      //M[2][2]=0.1;  //<-- CONTINUEHERE: for debugging only.  remove later!
       int n_sweeps = eigen_calc.Diagonalize(M, evals, Rt);
 
       if ((n_matrices == 1) && (i_test == 0)) {
