@@ -36,7 +36,7 @@ template<typename Scalar, typename Vector, typename Matrix>
 void
 SortRows(Vector eval, Matrix evec, int n, bool sort_absv=false)
 {
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n-1; i++) {
     int i_max = i;
     for (int j = i+1; j < n; j++) {
       if (sort_absv) { //sort by absolute value?
@@ -187,15 +187,28 @@ void TestJacobi(int n, //<! matrix size
       // (This is a way to specify numbers with a precise range of magnitudes.)
       double rand_erange = (random_real01(generator)-0.5); // a number between [-0.5,0.5]
       rand_erange *= eval_magnitude_range; // scale this by eval_magnitude_range
-      evals_known[i] = std::exp(rand_erange);
+      evals_known[i] = std::exp(rand_erange*std::log(10.0));
       // also consider both positive and negative eigenvalues:
       if (random_real01(generator) < 0.5)
         evals_known[i] = -evals_known[i];
       D[i][i] = evals_known[i];
     }
 
+    //D[0][0]=1.141911754949; //<--CONTINUEHERE: for debugging only.remove later
+    //D[1][1]=0.011055696467; //<--CONTINUEHERE: for debugging only.remove later
+    //D[2][2]=0.097032548584; //<--CONTINUEHERE: for debugging only.remove later
+
     // Now randomly generate the R and Rt matrices (ie. the eigenvectors):
     GenRandOrth<double, double**>(R, n, generator);
+    //R[0][0]=0.75502102844; //<--CONTINUEHERE: for debugging only.remove later
+    //R[0][1]=-0.6557005769; //<--CONTINUEHERE: for debugging only.remove later
+    //R[0][2]=0.0;           //<--CONTINUEHERE: for debugging only.remove later
+    //R[1][0]=0.6557005769;  //<--CONTINUEHERE: for debugging only.remove later
+    //R[1][1]=0.75502102844; //<--CONTINUEHERE: for debugging only.remove later
+    //R[1][2]=0.0;           //<--CONTINUEHERE: for debugging only.remove later
+    //R[2][0]=0.0;           //<--CONTINUEHERE: for debugging only.remove later
+    //R[2][1]=0.0;           //<--CONTINUEHERE: for debugging only.remove later
+    //R[2][2]=1.0;           //<--CONTINUEHERE: for debugging only.remove later
     // Rt is the transpose of R
     for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++)
@@ -239,7 +252,7 @@ void TestJacobi(int n, //<! matrix size
         for (int i = 0; i < n; i++)
           cout << evals[i] << " ";
         cout << "\n";
-        cout << "Eigenvectors calculated by Jacobi::Diagonalize()\n";
+        cout << "Eigenvectors (rows) calculated by Jacobi::Diagonalize()\n";
         for (int i = 0; i < n; i++) {
           for (int j = 0; j < n; j++)
             cout << Rt[i][j] << " ";

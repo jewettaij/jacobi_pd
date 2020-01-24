@@ -241,43 +241,40 @@ ApplyRot(Matrix M,  //!< matrix
   // M[i][i] = c*c*M[i][i] + s*s*M[j][j] - 2*s*c*M[i][j]
   // M[j][j] = s*s*M[i][i] + c*c*M[j][j] + 2*s*c*M[i][j]
 
-  // Compute the off-diagonal elements of M which have changed:
+  //Update the off-diagonal elements of M which will change (above the diagonal)
 
   assert(i < j);
 
   M[i][j] = 0.0;
 
-  // compute M[w][i] and M[i][w] for all w!=i
-  for (int w=0; w < i; w++) {           // 0 <= w <  i  <  j < n
-    M[i][w] = M[w][i]; //backup the previous value (needed later) below diagonal
-    M[w][i] = c*M[w][i] - s*M[w][j];
+  //compute M[w][i] and M[i][w] for all w!=i,considering above-diagonal elements
+  for (int w=0; w < i; w++) {        // 0 <= w <  i  <  j < n
+    M[i][w] = M[w][i]; //backup the previous value. store below diagonal (i>w)
+    M[w][i] = c*M[w][i] - s*M[w][j]; //M[w][i], M[w][j] from previous iteration
     if (std::abs(M[w][i]) > std::abs(M[w][max_indx_rw[w]])) max_indx_rw[w] = i;
   }
-  for (int w=i+1; w < j; w++) {         // 0 <= i <  w  <  j < n
-    M[w][i] = M[i][w]; //backup the previous value (needed later) below diagonal
-    M[i][w] = c*M[i][w] - s*M[w][j];
+  for (int w=i+1; w < j; w++) {      // 0 <= i <  w  <  j < n
+    M[w][i] = M[i][w]; //backup the previous value. store below diagonal (w>i)
+    M[i][w] = c*M[i][w] - s*M[w][j]; //M[i][w], M[w][j] from previous iteration
     if (std::abs(M[i][w]) > std::abs(M[i][max_indx_rw[i]])) max_indx_rw[i] = w;
   }
-  for (int w=j+1; w < n; w++) {         // 0 <= i < j+1 <= w < n
-    M[w][i] = M[i][w]; //backup the previous value (needed later) below diagonal
-    M[i][w] = c*M[i][w] - s*M[j][w];
+  for (int w=j+1; w < n; w++) {      // 0 <= i < j+1 <= w < n
+    M[w][i] = M[i][w]; //backup the previous value. store below diagonal (w>i)
+    M[i][w] = c*M[i][w] - s*M[j][w]; //M[i][w], M[j][w] from previous iteration
     if (std::abs(M[i][w]) > std::abs(M[i][max_indx_rw[i]])) max_indx_rw[i] = w;
   }
 
-  // compute M[w][j] and M[w][j] for all w!=j
-  for (int w=0; w < i; w++) {    // 0 <=  w  <  i <  j < n
-    //M[w][j] = s*M[w][i] + c*M[w][j];
-    M[w][j] = s*M[i][w] + c*M[w][j]; //Note:M[w][i] was updated, M[i][w] is not
+  //compute M[w][j] and M[w][j] for all w!=j,considering above-diagonal elements
+  for (int w=0; w < i; w++) {        // 0 <=  w  <  i <  j < n
+    M[w][j] = s*M[i][w] + c*M[w][j]; //M[i][w], M[w][j] from previous iteration
     if (std::abs(M[w][j]) > std::abs(M[w][max_indx_rw[w]])) max_indx_rw[w] = j;
   }
-  for (int w=i+1; w < j; w++) {    // 0 <= i+1 <= w <  j < n
-    //M[w][j] = s*M[i][w] + c*M[w][j];
-    M[w][j] = s*M[w][i] + c*M[w][j]; //Note:M[i][w] was updated, M[w][i] is not
+  for (int w=i+1; w < j; w++) {      // 0 <= i+1 <= w <  j < n
+    M[w][j] = s*M[w][i] + c*M[w][j]; //M[w][i], M[w][j] from previous iteration
     if (std::abs(M[w][j]) > std::abs(M[w][max_indx_rw[w]])) max_indx_rw[w] = j;
   }
-  for (int w=j+1; w < n; w++) {    // 0 <=  i  <  j <  w < n
-    //M[j][w] = s*M[i][w] + c*M[j][w];
-    M[j][w] = s*M[w][i] + c*M[j][w]; //Note:M[i][w] was updated, M[w][i] is not
+  for (int w=j+1; w < n; w++) {      // 0 <=  i  <  j <  w < n
+    M[j][w] = s*M[w][i] + c*M[j][w]; //M[w][i], M[j][w] from previous iteration
     if (std::abs(M[j][w]) > std::abs(M[j][max_indx_rw[j]])) max_indx_rw[j] = w;
   }
 }
@@ -300,8 +297,9 @@ ApplyRotRight(Matrix E,  //!< matrix
 {
   // Recall that c = cos(θ) and s = sin(θ)
   for (int u = 0; u < n; u++) {
+    Scalar Eui = E[u][i]; //backup E[u][i]
     E[u][i] = c*E[u][i] - s*E[u][j];
-    E[u][j] = s*E[u][i] + c*E[u][j];
+    E[u][j] = s*Eui     + c*E[u][j];
   }
 }
 
@@ -354,13 +352,19 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
             Vector eval,          //!< store the eigenvalues here
             Matrix evec,          //!< store the eigenvectors here (in rows)
             SortCriteria sort_criteria, //!<sort results?
-            bool calc_evects,     //!< calculate the eigenvectors?
+            bool calc_evec,     //!< calculate the eigenvectors?
             int max_num_sweeps)   //!< limit the number of iterations ("sweeps")
 {
-  for (int i = 0; i < n-1; i++)
-    //Initialize the "max_indx_rw[]" array (useful for finding the max entry)
-    max_indx_rw[i] = MaxEntryRow(M, i);
+  // -- Initialization --
+  if (calc_evec)
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)        //Initialize the evec[][] matrix.
+        evec[i][j] = (i==j) ? 1.0 : 0.0; //Set evec equal to the identity matrix
 
+  for (int i = 0; i < n-1; i++)          //Initialize the "max_indx_rw[]" array 
+    max_indx_rw[i] = MaxEntryRow(M, i);  //(which is needed by MaxEntry())
+
+  // -- Iteration --
   int n_iters;                                  // number of pivots chosen
   int max_num_iters = max_num_sweeps*n*(n-1)/2; //"sweep" = n*(n-1)/2 iters
   for (n_iters=0; n_iters < max_num_iters; n_iters++) {
@@ -370,21 +374,22 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
     if (M[i][j] == 0.0)
       break;
 
+    // If M[i][j] is small compared to M[i][i] and M[j][j], set it to 0.
     if ((M[i][i] + M[i][j] == M[i][i]) && (M[j][j] + M[i][j] == M[j][j])) {
-      // If M[i][j] is small compared to M[i][i] and M[j][j], set it to 0.
       M[i][j] = 0.0;
       max_indx_rw[i] = MaxEntryRow(M, i);//must also update max_indx_rw[i]
       continue;
     }
 
+    // Otherwise, apply a rotation to make M[i][j] = 0
     CalcRot(M, i, j);  // Calculate the parameters of the rotation matrix.
     ApplyRot(M, i, j); // Apply this rotation to the M matrix.
-
-    if (calc_evects)   // Optional: If the caller wants the eigenvectors, then
-      ApplyRotRight(evec,i,j); // Apply the rotation to the eigenvector matrix
+    if (calc_evec)     // Optional: If the caller wants the eigenvectors, then
+      ApplyRotRight(evec,i,j); // apply the rotation to the eigenvector matrix
 
   } //for (int n_iters=0; n_iters < max_num_iters; n_iters++)
 
+  // -- Post-processing --
   for (int i = 0; i < n; i++)
     eval[i] = M[i][i];
 
@@ -392,7 +397,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
   if (sort_criteria != DO_NOT_SORT)
     SortRows(eval, evec, n, sort_criteria);
 
-  return n_iters / (n*(n-1)/2); //returns the number of "sweeps"(converged?)
+  return n_iters / (n*(n-1)/2); //returns the number of "sweeps" (converged?)
 }
 
 
@@ -402,7 +407,7 @@ template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 SortRows(Vector eval, Matrix evec, int n, SortCriteria sort_criteria) const
 {
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n-1; i++) {
     int i_max = i;
     for (int j = i+1; j < n; j++) {
       // find the "maximum" element in the array starting at position i+1
