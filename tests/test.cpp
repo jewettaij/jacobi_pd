@@ -29,6 +29,18 @@ inline static bool SimilarVec(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
   return true;
 }
 
+// are two vectors (containing n numbers) similar?
+template<typename Scalar, typename Vector>
+inline static bool SimilarVecUnsigned(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
+  if (SimilarVec(a, b, n, eps))
+    return true;
+  else {
+    for (int i = 0; i < n; i++)
+      b[i] = -b[i];
+    return SimilarVec(a, b, n, eps);
+  }
+}
+
 //Sort the rows of a matrix "evec" by the numbers contained in "eval"
 //(This is a simple O(n^2) sorting method, but O(n^2) is a lower bound anyway.)
 //This is the same as the Jacobi::SortRows(), but that function is private.
@@ -263,7 +275,7 @@ void TestJacobi(int n, //<! matrix size
 
       assert(SimilarVec(evals, evals_known, n, 1.0e-06));
       for (int i = 0; i < n; i++)
-        assert(SimilarVec(R[i], Rt[i], n, 1.0e-06));
+        assert(SimilarVecUnsigned(R[i], Rt[i], n, 1.0e-06));
 
     } //for (int i_test = 0; i_test < n_tests_per_matrix; i++)
 

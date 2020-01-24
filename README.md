@@ -6,11 +6,13 @@
 jacobi
 ===========
 
-# Development Status: *Planning (pre-alpha)*
+# Development Status: *alpha*
 
-WARNING: As of 2019-1-21, this code compiles,
-but I have not yet had time to begin the debugging process.
-(Once started, it should not take long.)
+As of 2020-1-23, basic functionality appears to be working.
+More testing is needed including tests for memory leaks and profiling.
+The API might change slightly, but existing code built using
+it should still work.
+(I might add "const" to first argument of Jacobi::Diagonalize().)
 
 
 ## Description

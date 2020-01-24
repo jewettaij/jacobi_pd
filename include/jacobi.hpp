@@ -84,11 +84,11 @@ private:
                 int i,     //!< row index
                 int j);     //!< column index
 
-  /// @brief Multiply matrix E on the right by the (previously calculated)
-  ///         rotation matrix.
-  void ApplyRotRight(Matrix E,  //!< matrix
-                     int i,     //!< row index
-                     int j);    //!< column index
+  /// @brief Multiply matrix E on the left by the (previously calculated)
+  ///        rotation matrix.
+  void ApplyRotLeft(Matrix E,  //!< matrix
+                    int i,     //!< row index
+                    int j);    //!< column index
 
   ///@brief Find the off-diagonal index in row i whose absolute value is largest
   int MaxEntryRow(Matrix M, int i) const;
@@ -282,24 +282,24 @@ ApplyRot(Matrix M,  //!< matrix
 
 
 
-/// brief   Multiply matrix M on the RIGHT side only by a rotation matrix.
+/// brief   Multiply matrix M on the LEFT side only by a rotation matrix.
 ///         This matrix performs a rotation in the i,j plane by angle θ  (where
 ///         the arguments "s" and "c" refer to cos(θ) and sin(θ), respectively).
 /// @code
-///   E'_uv = Σ_w  E_uw * R_wv
+///   E'_uv = Σ_w  R_uw * E_wv
 /// @endcode
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
-ApplyRotRight(Matrix E,  //!< matrix
-              int i,     //!< row index
-              int j)     //!< column index
+ApplyRotLeft(Matrix E,  //!< matrix
+             int i,     //!< row index
+             int j)     //!< column index
 {
   // Recall that c = cos(θ) and s = sin(θ)
   for (int u = 0; u < n; u++) {
-    Scalar Eui = E[u][i]; //backup E[u][i]
-    E[u][i] = c*E[u][i] - s*E[u][j];
-    E[u][j] = s*Eui     + c*E[u][j];
+    Scalar Eiu = E[i][u]; //backup E[u][i]
+    E[i][u] = c*E[i][u] - s*E[j][u];
+    E[j][u] = s*Eiu     + c*E[j][u];
   }
 }
 
@@ -365,7 +365,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
     max_indx_rw[i] = MaxEntryRow(M, i);  //(which is needed by MaxEntry())
 
   // -- Iteration --
-  int n_iters;                                  // number of pivots chosen
+  int n_iters;                                  //number of pivots chosen so far
   int max_num_iters = max_num_sweeps*n*(n-1)/2; //"sweep" = n*(n-1)/2 iters
   for (n_iters=0; n_iters < max_num_iters; n_iters++) {
     int i,j;
@@ -385,7 +385,7 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
     CalcRot(M, i, j);  // Calculate the parameters of the rotation matrix.
     ApplyRot(M, i, j); // Apply this rotation to the M matrix.
     if (calc_evec)     // Optional: If the caller wants the eigenvectors, then
-      ApplyRotRight(evec,i,j); // apply the rotation to the eigenvector matrix
+      ApplyRotLeft(evec,i,j); // apply the rotation to the eigenvector matrix
 
   } //for (int n_iters=0; n_iters < max_num_iters; n_iters++)
 
