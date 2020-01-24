@@ -8,9 +8,9 @@ jacobi
 
 ## Description
 
-I have recently been having a hard time finding a short, simple eigenvector calculator in C++ with an explicitly-stated permissive open-source license.  Out of that frustration, I wrote this repository and released it in the [***public domain*** using the ***CC0*** license](https://creativecommons.org/publicdomain/zero/1.0/).
-
-This repository contains header-only template C++ source code for the
+This repository contains
+[public domain]((https://creativecommons.org/publicdomain/zero/1.0/)
+header-only template C++ source code for the
 [Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
 This remains one of the oldest and most popular algorithms for
 diagonalizing dense, square, real, symmetric matrices.
@@ -25,12 +25,14 @@ or any other C or C++ object which supports double-indexing.
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
+I have recently been having a hard time finding a short, simple eigenvector calculator in C++ with an explicitly-stated permissive open-source license.
 Amazingly, in early 2020, no *public-domain*
-C++ code exists for matrix diagonalization.
+C++ code yet exists for matrix diagonalization.
 Other C++ libraries such as Eigen or GSL
 use somewhat more restrictive licenses.
 *(On several occasions, those licenses have prevented me from borrowing code
 from those libraries to contribute to other open-source projects.)*
+Out of that frustration, I wrote this repository.
 
 *Caveats:* The code in this repository has not been optimized,
 does not run in parallel,
