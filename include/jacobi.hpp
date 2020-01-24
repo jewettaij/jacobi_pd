@@ -95,7 +95,7 @@ private:
 
   /// @brief Find the indices (i_max, j_max) marking the location of the
   ///        entry in the matrix with the largest absolute value.  This
-  ///        exploits the max_idx_row[] array to find the answer in O(n) time.
+  ///        uses the max_idx_row[] array to find the answer in O(n) time.
   /// @returns void.  After it is invoked, the location of the largest matrix
   ///        element will be stored in the i_max and j_max arguments.
   void MaxEntry(Matrix M, int& i_max, int& j_max) const;
@@ -285,7 +285,8 @@ ApplyRot(Matrix M,  //!< matrix
   }
   // now that we're done modifying row j, we can update max_idx_row[j]
   max_idx_row[j] = MaxEntryRow(M, j);
-}
+
+} //Jacobi::ApplyRot()
 
 
 
@@ -467,7 +468,6 @@ void Jacobi<Scalar, Vector, Matrix>::
 Alloc(int n) {
   this->n = n;
   max_idx_row = new int[n];
-  assert(max_idx_row);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
