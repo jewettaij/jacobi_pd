@@ -16,8 +16,8 @@ matrix:
         - cd tests
         - g++ -std=c++11 -I../include -o test_jacobi test.cpp
         #- cppcheck --quiet --error-exitcode=1
-        - ./test_superpose3d 2 100 3.0
-        - ./test_superpose3d 3 100 3.0
-        - ./test_superpose3d 4 100 3.0
-        - ./test_superpose3d 5 100 3.0
+        - ./test_jacobi 2 100 3.0
+        - ./test_jacobi 3 100 3.0
+        - ./test_jacobi 4 100 3.0
+        - ./test_jacobi 5 100 3.0
         - cd ../

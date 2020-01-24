@@ -207,21 +207,8 @@ void TestJacobi(int n, //<! matrix size
       D[i][i] = evals_known[i];
     }
 
-    //D[0][0]=1.141911754949; //<--CONTINUEHERE: for debugging only.remove later
-    //D[1][1]=0.011055696467; //<--CONTINUEHERE: for debugging only.remove later
-    //D[2][2]=0.097032548584; //<--CONTINUEHERE: for debugging only.remove later
-
     // Now randomly generate the R and Rt matrices (ie. the eigenvectors):
     GenRandOrth<double, double**>(R, n, generator);
-    //R[0][0]=0.75502102844; //<--CONTINUEHERE: for debugging only.remove later
-    //R[0][1]=-0.6557005769; //<--CONTINUEHERE: for debugging only.remove later
-    //R[0][2]=0.0;           //<--CONTINUEHERE: for debugging only.remove later
-    //R[1][0]=0.6557005769;  //<--CONTINUEHERE: for debugging only.remove later
-    //R[1][1]=0.75502102844; //<--CONTINUEHERE: for debugging only.remove later
-    //R[1][2]=0.0;           //<--CONTINUEHERE: for debugging only.remove later
-    //R[2][0]=0.0;           //<--CONTINUEHERE: for debugging only.remove later
-    //R[2][1]=0.0;           //<--CONTINUEHERE: for debugging only.remove later
-    //R[2][2]=1.0;           //<--CONTINUEHERE: for debugging only.remove later
     // Rt is the transpose of R
     for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++)
@@ -251,12 +238,6 @@ void TestJacobi(int n, //<! matrix size
     for (int i_test = 0; i_test < n_tests_per_matrix; i_test++) {
 
       // Now, calculate the eigenvalues and eigenvectors
-      //M[0][0]=0.65; //<-- CONTINUEHERE: for debugging only.  remove later!
-      //M[0][1]=0.53; //<-- CONTINUEHERE: for debugging only.  remove later!
-      //M[0][2]=0.11; //<-- CONTINUEHERE: for debugging only.  remove later!
-      //M[1][1]=0.5;  //<-- CONTINUEHERE: for debugging only.  remove later!
-      //M[1][2]=0.15; //<-- CONTINUEHERE: for debugging only.  remove later!
-      //M[2][2]=0.1;  //<-- CONTINUEHERE: for debugging only.  remove later!
       int n_sweeps = eigen_calc.Diagonalize(M, evals, Rt);
 
       if ((n_matrices == 1) && (i_test == 0)) {
@@ -318,14 +299,15 @@ int main(int argc, char **argv) {
   }
 
   n_size = std::stoi(argv[1]);
-  if (argc >= 2)
+  if (argc > 2)
     n_matr = std::stoi(argv[2]);
-  if (argc >= 3)
+  if (argc > 3)
     erange = std::stof(argv[3]);
-  if (argc >= 4)
+  if (argc > 4)
     n_tests = std::stoi(argv[4]);
 
   TestJacobi(n_size, n_matr, erange, n_tests);
 
+  cout << "test passed\n" << endl;
   return EXIT_SUCCESS;
 }
