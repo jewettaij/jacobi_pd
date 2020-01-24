@@ -9,7 +9,7 @@ jacobi
 ## Description
 
 This repository contains
-[public domain]((https://creativecommons.org/publicdomain/zero/1.0/)
+[public domain](https://creativecommons.org/publicdomain/zero/1.0/)
 header-only template C++ source code for the
 [Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
 This remains one of the oldest and most popular algorithms for
