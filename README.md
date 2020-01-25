@@ -38,14 +38,12 @@ While my approach bears similary to the strategy used in this
 [wikipedia article](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm),
 I did not use any of the code from that article.
 No lines of code in this small repository have been borrowed.
-(It is legally safe to use this code everywhere.)
 
 
-
-*Caveats:* The code in this repository has not been optimized,
+The code in this repository has not been optimized,
 does not run in parallel,
 and it only works on dense square real symmetric matrices.
-However you can freely use this humble code anywhere you like.
+However you can freely use this code anywhere you like.
 Use at your own risk.
 
 
