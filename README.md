@@ -29,22 +29,20 @@ I have recently been having a hard time finding a short, simple eigenvector
 calculator in C++ with an explicitly-stated permissive open-source license.
 Amazingly, in early 2020, no simple *public-domain*
 C++ code yet exists for matrix diagonalization.
-Other C++ libraries such as Eigen or GSL use somewhat more restrictive licenses
-or contain code snippets borrowed from other sources, such as
-[numerical recipes](http://mingus.as.arizona.edu/~bjw/software/boycottnr.html).
+Other C++ libraries such as Eigen or GSL use somewhat more restrictive licenses.
 *(On several occasions, those licenses have prevented me from borrowing code
-from those libraries to contribute to other open-source projects.)*
-While my approach bears similary to the strategy used in this
-[wikipedia article](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm),
-I did not use any of the code from that article.
-No lines of code in this small repository have been borrowed.
+from these libraries to contribute to other open-source projects.)*  Some
+repositories may unwittingly contain code snippets from other sources, such as
+[numerical recipes](http://mingus.as.arizona.edu/~bjw/software/boycottnr.html).
+This repository was written from scratch.  No lines of code were borrowed
+or adapted from other sources.
 
 
-The code in this repository has not been optimized,
+
+*Caveats:* The code in this repository has not been optimized,
 does not run in parallel,
 and it only works on dense square real symmetric matrices.
 However you can freely use this code anywhere you like.
-Use at your own risk.
 
 
 ## Installation
