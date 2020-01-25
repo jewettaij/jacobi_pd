@@ -161,7 +161,7 @@ template <typename Scalar>
 void TestJacobi(int n, //<! matrix size
                 int n_matrices=100, //<! number of matrices to test
                 Scalar eval_magnitude_range=2.0, //<! range of eigevalues
-                int n_tests_per_matrix=50) //<! repeat test for benchmarking?
+                int n_tests_per_matrix=1) //<! repeat test for benchmarking?
 {
   cout << endl << "-- Diagonalization test (real symmetric)  --" << endl;
 

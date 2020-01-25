@@ -18,21 +18,29 @@ diagonalizing dense, square, real, symmetric matrices.
 The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
 vector\<vector\<X\>\>, fixed-size arrays,
 or any other C or C++ object which supports double-indexing.
-(Where **X** is any real numeric type.  Complex numbers are not supported.)
+(Here **X** is any real numeric type.  Complex numbers are not supported.)
 
 *(Memory allocation on the heap is avoided except during initialization.)*
 
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
-I have recently been having a hard time finding a short, simple eigenvector calculator in C++ with an explicitly-stated permissive open-source license.
-Amazingly, in early 2020, no *public-domain*
+I have recently been having a hard time finding a short, simple eigenvector
+calculator in C++ with an explicitly-stated permissive open-source license.
+Amazingly, in early 2020, no simple *public-domain*
 C++ code yet exists for matrix diagonalization.
-Other C++ libraries such as Eigen or GSL
-use somewhat more restrictive licenses.
+Other C++ libraries such as Eigen or GSL use somewhat more restrictive licenses
+or contain code snippets borrowed from other sources, such as
+[numerical recipes](http://mingus.as.arizona.edu/~bjw/software/boycottnr.html).
 *(On several occasions, those licenses have prevented me from borrowing code
 from those libraries to contribute to other open-source projects.)*
-Out of that frustration, I wrote this repository.
+While my approach bears similary to the strategy used in this
+[wikipedia article](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm),
+I did not use any of the code from that article.
+No lines of code in this small repository have been borrowed.
+(It is legally safe to use this code everywhere.)
+
+
 
 *Caveats:* The code in this repository has not been optimized,
 does not run in parallel,
@@ -43,11 +51,11 @@ Use at your own risk.
 
 ## Installation
 
-This is a header-only library.
-
-Copy the files in the [include](include) subdirectory,
+Copy the file(s) in the [include](include) subdirectory,
 to a location in your
 [include path](https://www.rapidtables.com/code/linux/gcc/gcc-i.html).
+No linking is necessary.
+This is a header-only library.
 
 # Development Status: *alpha*
 

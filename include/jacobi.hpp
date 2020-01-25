@@ -127,10 +127,69 @@ private:
 // -------------- IMPLEMENTATION --------------
 
 
-/// brief  Calculate the components of a rotation matrix which performs a
+
+template<typename Scalar, typename Vector, typename Matrix>
+int Jacobi<Scalar, Vector, Matrix>::
+Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
+            Vector eval,          //!< store the eigenvalues here
+            Matrix evec,          //!< store the eigenvectors here (in rows)
+            SortCriteria sort_criteria, //!<sort results?
+            bool calc_evec,     //!< calculate the eigenvectors?
+            int max_num_sweeps)   //!< limit the number of iterations ("sweeps")
+{
+  // -- Initialization --
+  if (calc_evec)
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)        //Initialize the evec[][] matrix.
+        evec[i][j] = (i==j) ? 1.0 : 0.0; //Set evec equal to the identity matrix
+
+  for (int i = 0; i < n-1; i++)          //Initialize the "max_idx_row[]" array 
+    max_idx_row[i] = MaxEntryRow(M, i);  //(which is needed by MaxEntry())
+
+  // -- Iteration --
+  int n_iters;
+  int max_num_iters = max_num_sweeps*n*(n-1)/2; //"sweep" = n*(n-1)/2 iters
+  for (n_iters=0; n_iters < max_num_iters; n_iters++) {
+    int i,j;
+    MaxEntry(M, i, j); // Find the maximum entry in the matrix. Store in i,j
+
+    if (M[i][j] == 0.0)
+      break;
+
+    // If M[i][j] is small compared to M[i][i] and M[j][j], set it to 0.
+    if ((M[i][i] + M[i][j] == M[i][i]) && (M[j][j] + M[i][j] == M[j][j])) {
+      M[i][j] = 0.0;
+      max_idx_row[i] = MaxEntryRow(M,i); //must also update max_idx_row[i]
+      continue;
+    }
+
+    // Otherwise, apply a rotation to make M[i][j] = 0
+    CalcRot(M, i, j);  // Calculate the parameters of the rotation matrix.
+    ApplyRot(M, i, j); // Apply this rotation to the M matrix.
+    if (calc_evec)     // Optional: If the caller wants the eigenvectors, then
+      ApplyRotLeft(evec,i,j); // apply the rotation to the eigenvector matrix
+
+  } //for (int n_iters=0; n_iters < max_num_iters; n_iters++)
+
+  // -- Post-processing --
+  for (int i = 0; i < n; i++)
+    eval[i] = M[i][i];
+
+  // Sort eigenvalues and eigenvectors?
+  if (sort_criteria != DO_NOT_SORT)
+    SortRows(eval, evec, n, sort_criteria);
+
+  return n_iters / (n*(n-1)/2); //returns the number of "sweeps" (converged?)
+}
+
+
+
+/// @brief Calculate the components of a rotation matrix which performs a
 ///        i,j plane by an angle (θ) that (when multiplied on both sides)
 ///        will zero the ij'th element of M, so that afterwards M[i][j] = 0
 ///        (This will also zero M[j][i] since M is assumed to be symmetric.)
+///        The results will be stored in c, s, and t
+///        (which store cos(θ), sin(θ), and tan(θ), respectively).
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
@@ -161,9 +220,9 @@ CalcRot(Matrix M,    //!< matrix
 
 
 /// brief   Perform a similarity transform by multiplying matrix M on both
-///         sides by a rotation matrix (applying its inverse to the other side)
-///         This matrix performs a rotation in the i,j plane by angle θ.
-///         Also update the max_idx_row[] array.
+///         sides by a rotation matrix (transposing one of them).
+///         This rotation matrix performs a rotation in the i,j plane
+///         by angle θ.  Also updates the max_idx_row[] array.
 /// details This function assumes that i<j and that cos(θ), sin(θ), and tan(θ)
 ///         have already been computed (by invoking CalcRot()).
 ///         To save time, since the matrix is symmetric, the elements
@@ -350,62 +409,6 @@ MaxEntry(Matrix M, int& i_max, int& j_max) const {
   //    assert(std::abs(M[i][j]) <= max_entry);
   //// --
   //#endif
-}
-
-
-
-template<typename Scalar, typename Vector, typename Matrix>
-int Jacobi<Scalar, Vector, Matrix>::
-Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
-            Vector eval,          //!< store the eigenvalues here
-            Matrix evec,          //!< store the eigenvectors here (in rows)
-            SortCriteria sort_criteria, //!<sort results?
-            bool calc_evec,     //!< calculate the eigenvectors?
-            int max_num_sweeps)   //!< limit the number of iterations ("sweeps")
-{
-  // -- Initialization --
-  if (calc_evec)
-    for (int i = 0; i < n; i++)
-      for (int j = 0; j < n; j++)        //Initialize the evec[][] matrix.
-        evec[i][j] = (i==j) ? 1.0 : 0.0; //Set evec equal to the identity matrix
-
-  for (int i = 0; i < n-1; i++)          //Initialize the "max_idx_row[]" array 
-    max_idx_row[i] = MaxEntryRow(M, i);  //(which is needed by MaxEntry())
-
-  // -- Iteration --
-  int n_iters;                                  //number of pivots chosen so far
-  int max_num_iters = max_num_sweeps*n*(n-1)/2; //"sweep" = n*(n-1)/2 iters
-  for (n_iters=0; n_iters < max_num_iters; n_iters++) {
-    int i,j;
-    MaxEntry(M, i, j); // Find the maximum entry in the matrix. Store in i,j
-
-    if (M[i][j] == 0.0)
-      break;
-
-    // If M[i][j] is small compared to M[i][i] and M[j][j], set it to 0.
-    if ((M[i][i] + M[i][j] == M[i][i]) && (M[j][j] + M[i][j] == M[j][j])) {
-      M[i][j] = 0.0;
-      max_idx_row[i] = MaxEntryRow(M,i); //must also update max_idx_row[i]
-      continue;
-    }
-
-    // Otherwise, apply a rotation to make M[i][j] = 0
-    CalcRot(M, i, j);  // Calculate the parameters of the rotation matrix.
-    ApplyRot(M, i, j); // Apply this rotation to the M matrix.
-    if (calc_evec)     // Optional: If the caller wants the eigenvectors, then
-      ApplyRotLeft(evec,i,j); // apply the rotation to the eigenvector matrix
-
-  } //for (int n_iters=0; n_iters < max_num_iters; n_iters++)
-
-  // -- Post-processing --
-  for (int i = 0; i < n; i++)
-    eval[i] = M[i][i];
-
-  // Sort eigenvalues and eigenvectors?
-  if (sort_criteria != DO_NOT_SORT)
-    SortRows(eval, evec, n, sort_criteria);
-
-  return n_iters / (n*(n-1)/2); //returns the number of "sweeps" (converged?)
 }
 
 
