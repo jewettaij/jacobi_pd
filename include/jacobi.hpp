@@ -22,9 +22,7 @@ template<typename Scalar, typename Vector, typename Matrix>
 class Jacobi
 {
   int n;                   //!< the size of the matrix
-  // The next 3 data members store the rotation, translation and scale
-  // after optimal superposition
-  int *max_idx_row;      //!< for each row, store the index of the maximum off-diagonal element
+  int *max_idx_row; //!< for row i, the index j of the maximum element where j>i
   // Precomputed cosine, sin, and tangent of the most recent rotation angle:
   Scalar c;                //!< = cos(θ)
   Scalar s;                //!< = sin(θ)
@@ -33,7 +31,7 @@ class Jacobi
 public:
 
   /// @brief  Specify the size of the matrices you want to diagonalize later.
-  /// @param n  the number of rows and columns in the matrix
+  /// @param n  the size (ie. number of rows) of the square matrix
   Jacobi(int n) {
     Init();
     SetSize(n);
@@ -62,15 +60,14 @@ public:
               Matrix evec,   //!< store the eigenvectors here (in rows)
               SortCriteria sort_criteria=SORT_DECREASING_EVALS,//!<sort results?
               bool calc_evects=true,     //!< calculate the eigenvectors?
-              int max_num_sweeps = 60);  //!< limit the number of iterations
+              int max_num_sweeps = 50);  //!< limit the number of iterations
 
 private:
 
   /// @brief Calculate the components of a rotation matrix which performs a
-  ///        i,j plane by an angle (θ) that (when multiplied on both sides)
-  ///        will zero the ij'th element of M, so that afterwards M[i][j] = 0
-  ///        (This will also zero M[j][i] since M is assumed to be symmetric.)
-  ///        The results will be stored in c, s, and t
+  ///        rotation in the i,j plane by an angle (θ) that (when multiplied on
+  ///        both sides) will zero the ij'th element of M, so that afterwards
+  ///        M[i][j] = 0.  The results will be stored in c, s, and t
   ///        (which store cos(θ), sin(θ), and tan(θ), respectively).
   void CalcRot(Matrix M,   //!< matrix
                int i,      //!< row index
@@ -79,10 +76,10 @@ private:
   /// @brief Apply the (previously calculated) rotation matrix to matrix M
   ///        by multiplying it on both sides (a "similarity transform").
   ///        (To save time, only update the elements in the upper-right
-  ///         triangular region of the matrix.)
+  ///         triangular region of the matrix.  It is assumed that i < j.)
   void ApplyRot(Matrix M,  //!< matrix
                 int i,     //!< row index
-                int j);     //!< column index
+                int j);    //!< column index
 
   /// @brief Multiply matrix E on the left by the (previously calculated)
   ///        rotation matrix.
@@ -130,12 +127,12 @@ private:
 
 template<typename Scalar, typename Vector, typename Matrix>
 int Jacobi<Scalar, Vector, Matrix>::
-Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
-            Vector eval,          //!< store the eigenvalues here
-            Matrix evec,          //!< store the eigenvectors here (in rows)
-            SortCriteria sort_criteria, //!<sort results?
-            bool calc_evec,     //!< calculate the eigenvectors?
-            int max_num_sweeps)   //!< limit the number of iterations ("sweeps")
+Diagonalize(Matrix M,           // the matrix you wish to diagonalize (size n)
+            Vector eval,        // store the eigenvalues here
+            Matrix evec,        // store the eigenvectors here (in rows)
+            SortCriteria sort_criteria, // sort results?
+            bool calc_evec,     // calculate the eigenvectors?
+            int max_num_sweeps) // limit the number of iterations ("sweeps")
 {
   // -- Initialization --
   if (calc_evec)
@@ -183,19 +180,17 @@ Diagonalize(Matrix M,          //!< the matrix you wish to diagonalize (size n)
 }
 
 
-
 /// @brief Calculate the components of a rotation matrix which performs a
-///        i,j plane by an angle (θ) that (when multiplied on both sides)
-///        will zero the ij'th element of M, so that afterwards M[i][j] = 0
-///        (This will also zero M[j][i] since M is assumed to be symmetric.)
-///        The results will be stored in c, s, and t
+///        rotation in the i,j plane by an angle (θ) that (when multiplied on
+///        both sides) will zero the ij'th element of M, so that afterwards
+///        M[i][j] = 0.  The results will be stored in c, s, and t
 ///        (which store cos(θ), sin(θ), and tan(θ), respectively).
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
-CalcRot(Matrix M,    //!< matrix
-        int i,       //!< row index
-        int j)       //!< column index
+CalcRot(Matrix M,    // matrix
+        int i,       // row index
+        int j)       // column index
 {
   t = 1.0; // = tan(θ)
   Scalar M_jj_ii = (M[j][j] - M[i][i]);
@@ -221,8 +216,8 @@ CalcRot(Matrix M,    //!< matrix
 
 /// brief   Perform a similarity transform by multiplying matrix M on both
 ///         sides by a rotation matrix (transposing one of them).
-///         This rotation matrix performs a rotation in the i,j plane
-///         by angle θ.  Also updates the max_idx_row[] array.
+///         This rotation matrix performs a rotation in the i,j plane by
+///         angle θ.  Also updates the max_idx_row[] array.  Assumes i < j.
 /// details This function assumes that i<j and that cos(θ), sin(θ), and tan(θ)
 ///         have already been computed (by invoking CalcRot()).
 ///         To save time, since the matrix is symmetric, the elements
@@ -283,9 +278,9 @@ CalcRot(Matrix M,    //!< matrix
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
-ApplyRot(Matrix M,  //!< matrix
-         int i,     //!< row index
-         int j)     //!< column index
+ApplyRot(Matrix M,  // matrix
+         int i,     // row index
+         int j)     // column index
 {
   // Recall that:
   // c = cos(θ)
@@ -359,9 +354,9 @@ ApplyRot(Matrix M,  //!< matrix
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
-ApplyRotLeft(Matrix E,  //!< matrix
-             int i,     //!< row index
-             int j)     //!< column index
+ApplyRotLeft(Matrix E,  // matrix
+             int i,     // row index
+             int j)     // column index
 {
   // Recall that c = cos(θ) and s = sin(θ)
   for (int u = 0; u < n; u++) {
