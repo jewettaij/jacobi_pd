@@ -57,18 +57,20 @@ SortRows(Vector eval,
     int i_max = i;
     for (int j = i+1; j < n; j++) {
       if (sort_decreasing) {
-        if (sort_abs) //sort by absolute value?
+        if (sort_abs) { //sort by absolute value?
           if (std::abs(eval[j]) > std::abs(eval[i_max]))
             i_max = j;
-          else if (eval[j] > eval[i_max])
-            i_max = j;
+        }
+        else if (eval[j] > eval[i_max])
+          i_max = j;
       }
       else {
-        if (sort_abs) //sort by absolute value?
+        if (sort_abs) { //sort by absolute value?
           if (std::abs(eval[j]) < std::abs(eval[i_max]))
             i_max = j;
-          else if (eval[j] < eval[i_max])
-            i_max = j;
+        }
+        else if (eval[j] < eval[i_max])
+          i_max = j;
       }
     }
     std::swap(eval[i], eval[i_max]); // sort "eval"

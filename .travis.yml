@@ -7,11 +7,10 @@ matrix:
 
     - language: cpp
       compiler: gcc
-      # (Optional? update to a relatively recent linux distro)
-      dist: xenial
+      # Optional: "dist" specifies the operating system ("bionic"=ubuntu18.04)
+      dist: bionic
       #install:
       #  - sudo apt-get install -qq cppcheck
-      #  - git clone https://github.com/kward/shunit2 shunit2
       script:
         - cd tests
         - g++ -std=c++11 -I../include -o test_jacobi test.cpp
@@ -23,3 +22,22 @@ matrix:
         - ./test_jacobi 10 100 3.0
         - ./test_jacobi 50 20 3.0
         - cd ../
+
+    - language: cpp
+      compiler: clang
+      # Optional: "dist" specifies the operating system ("bionic"=ubuntu18.04)
+      dist: bionic
+      #install:
+      #  - sudo apt-get install -qq cppcheck
+      script:
+        - cd tests
+        - clang++ -std=c++11 -I../include -o test_jacobi test.cpp
+        #- cppcheck --quiet --error-exitcode=1
+        - ./test_jacobi 2 1000 3.0
+        - ./test_jacobi 3 1000 3.0
+        - ./test_jacobi 4 1000 3.0
+        - ./test_jacobi 5 1000 3.0
+        - ./test_jacobi 10 100 3.0
+        - ./test_jacobi 50 20 3.0
+        - cd ../
+
