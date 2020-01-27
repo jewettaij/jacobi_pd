@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/jewettaij/jacobi.svg?branch=master)](https://travis-ci.org/jewettaij/jacobi.svg?branch=master)
-[![GitHub](https://img.shields.io/github/license/jewettaij/jacobi)](./LICENSE.md)
-[![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/jewettaij/jacobi)]()
+[![Build Status](https://travis-ci.org/jewettaij/jacobi_pd.svg?branch=master)](https://travis-ci.org/jewettaij/jacobi_pd.svg?branch=master)
+[![GitHub](https://img.shields.io/github/license/jewettaij/jacobi_pd)](./LICENSE.md)
+[![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/jewettaij/jacobi_pd)]()
 
 
-jacobi
+jacobi_pd
 ===========
 
 ## Description
@@ -87,7 +87,7 @@ it should still work.
 
 ## License
 
-*jacobi* is available under the terms of the [Creative-Commons-Zero license](LICENSE.md).
+*jacobi_pd* is available under the terms of the [Creative-Commons-Zero license](LICENSE.md).
 
 *Please send me corrections or suggestions.*
 
