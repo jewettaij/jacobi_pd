@@ -55,10 +55,12 @@ using namespace jacobi;
 double **M;      // A symmetric matrix you want to diagonalize
 double *evals;   // Store the eigenvalues here.
 double **evects; // Store the eigenvectors here.
+// Allocate space for M, evals, and evects, and load contents of M (omitted)...
 
-// Allocate space for M, evals, and evects, and load contents of M (omitted)
-// ...
-
+// Now create an instance of Jacobi ("eigen_calc").  This will allocate space
+// for storing intermediate calculations.  Once created, it can be reused
+// multiple times without incurring the cost of allocating memory on the heap.
+int n = 5;
 Jacobi<double, double*, double**> eigen_calc(n);
 
 // Now, calculate the eigenvalues and eigenvectors
