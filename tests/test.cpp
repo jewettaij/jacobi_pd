@@ -29,15 +29,16 @@ inline static bool SimilarVec(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
   return true;
 }
 
-// are two vectors (containing n numbers) similar?
+// are two vectors (or their reflections) similar?
 template<typename Scalar, typename Vector>
 inline static bool SimilarVecUnsigned(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
   if (SimilarVec(a, b, n, eps))
     return true;
   else {
     for (int i = 0; i < n; i++)
-      b[i] = -b[i];
-    return SimilarVec(a, b, n, eps);
+      if (not Similar(a[i], -b[i], eps))
+        return false;
+    return true;
   }
 }
 
@@ -46,17 +47,29 @@ inline static bool SimilarVecUnsigned(Vector a, Vector b, int n, Scalar eps=1.0e
 //This is the same as the Jacobi::SortRows(), but that function is private.
 template<typename Scalar, typename Vector, typename Matrix>
 void
-SortRows(Vector eval, Matrix evec, int n, bool sort_absv=false)
+SortRows(Vector eval,
+         Matrix evec,
+         int n,
+         bool sort_decreasing=true,
+         bool sort_abs=false)
 {
   for (int i = 0; i < n-1; i++) {
     int i_max = i;
     for (int j = i+1; j < n; j++) {
-      if (sort_absv) { //sort by absolute value?
-        if (std::abs(eval[j]) > std::abs(eval[i_max]))
-          i_max = j;
+      if (sort_decreasing) {
+        if (sort_abs) //sort by absolute value?
+          if (std::abs(eval[j]) > std::abs(eval[i_max]))
+            i_max = j;
+          else if (eval[j] > eval[i_max])
+            i_max = j;
       }
-      else if (eval[j] > eval[i_max])
-        i_max = j;
+      else {
+        if (sort_abs) //sort by absolute value?
+          if (std::abs(eval[j]) < std::abs(eval[i_max]))
+            i_max = j;
+          else if (eval[j] < eval[i_max])
+            i_max = j;
+      }
     }
     std::swap(eval[i], eval[i_max]); // sort "eval"
     for (int k = 0; k < n; k++)

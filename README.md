@@ -25,8 +25,8 @@ or any other C or C++ object which supports double-indexing.
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
-I have recently been having a hard time finding a short, simple eigenvector
-calculator in C++ with an explicitly-stated permissive open-source license.
+I have had a hard time finding a short, simple eigenvector calculator
+in C++ with an explicitly-stated permissive open-source license.
 Amazingly, in early 2020, no simple *public-domain*
 C++ code yet exists for matrix diagonalization.
 Other C++ libraries such as Eigen or GSL use somewhat more restrictive licenses.
@@ -52,7 +52,8 @@ using namespace jacobi_public_domain;
 
 // ...
 
-double **M;      // A symmetric matrix you want to diagonalize
+int n = 5;
+double **M;      // A symmetric 5x5 matrix you want to diagonalize
 double *evals;   // Store the eigenvalues here.
 double **evects; // Store the eigenvectors here.
 // Allocate space for M, evals, and evects, and load contents of M (omitted)...
@@ -60,7 +61,6 @@ double **evects; // Store the eigenvectors here.
 // Now create an instance of Jacobi ("eigen_calc").  This will allocate space
 // for storing intermediate calculations.  Once created, it can be reused
 // multiple times without incurring the cost of allocating memory on the heap.
-int n = 5;
 Jacobi<double, double*, double**> eigen_calc(n);
 
 // Now, calculate the eigenvalues and eigenvectors of M
