@@ -49,7 +49,6 @@ public:
   /// @brief Calculate the eigenvalues and eigevectors of a symmetric matrix
   ///        using the Jacobi eigenvalue algorithm:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
-  ///        Return true if the algorithm failed to converge.
   /// @returns The number_of_sweeps (= number_of_iterations / (n*(n-1)/2)).
   ///          If this equals max_num_sweeps, the algorithm failed to converge.
   /// @note  The contents of the matrix M is modified during the calculation.
@@ -246,7 +245,7 @@ CalcRot(Matrix M,    // matrix
 /// The components of M' are:
 ///   M'_uv =  Σ_w  Σ_z   R_wu * M_wz * R_zv
 ///
-/// Note that a Givens rotation at location i,j will modify all of the matrix
+/// Note that a the rotation at location i,j will modify all of the matrix
 /// elements containing at least one index which is either i or j
 /// such as: M[w][i], M[i][w], M[w][j], M[j][w].
 /// Check and see whether these modified matrix elements exceed the 
@@ -345,11 +344,11 @@ ApplyRot(Matrix M,  // matrix
 
 
 
-/// brief   Multiply matrix M on the LEFT side only by a rotation matrix.
-///         This matrix performs a rotation in the i,j plane by angle θ  (where
-///         the arguments "s" and "c" refer to cos(θ) and sin(θ), respectively).
+/// brief Multiply matrix M on the LEFT side by a transposed rotation matrix R^T
+///       This matrix performs a rotation in the i,j plane by angle θ  (where
+///       the arguments "s" and "c" refer to cos(θ) and sin(θ), respectively).
 /// @code
-///   E'_uv = Σ_w  R_uw * E_wv
+///   E'_uv = Σ_w  R_wu * E_wv
 /// @endcode
 
 template<typename Scalar, typename Vector, typename Matrix>
@@ -359,10 +358,10 @@ ApplyRotLeft(Matrix E,  // matrix
              int j)     // column index
 {
   // Recall that c = cos(θ) and s = sin(θ)
-  for (int u = 0; u < n; u++) {
-    Scalar Eiu = E[i][u]; //backup E[u][i]
-    E[i][u] = c*E[i][u] - s*E[j][u];
-    E[j][u] = s*Eiu     + c*E[j][u];
+  for (int v = 0; v < n; v++) {
+    Scalar Eiv = E[i][v]; //backup E[i][v]
+    E[i][v] = c*E[i][v] - s*E[j][v];
+    E[j][v] = s*Eiv     + c*E[j][v];
   }
 }
 

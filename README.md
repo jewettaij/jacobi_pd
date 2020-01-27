@@ -44,6 +44,27 @@ does not run in parallel,
 and it only works on dense square real symmetric matrices.
 However you can freely use this code anywhere you like.
 
+##  Example usage
+
+```cpp
+#include "jacobi.hpp"
+using namespace jacobi;
+
+// ...
+
+double **M;      // A symmetric matrix you want to diagonalize
+double *evals;   // Store the eigenvalues here.
+double **evects; // Store the eigenvectors here.
+
+// Allocate space for M, evals, and evects, and load contents of M (omitted)
+// ...
+
+Jacobi<double, double*, double**> eigen_calc(n);
+
+// Now, calculate the eigenvalues and eigenvectors
+eigen_calc.Diagonalize(M, evals, evects);
+```
+*(A complete working example can be found [here](tests/test.cpp).)*
 
 ## Installation
 
