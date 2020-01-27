@@ -48,7 +48,7 @@ However you can freely use this code anywhere you like.
 
 ```cpp
 #include "jacobi.hpp"
-using namespace jacobi;
+using namespace jacobi_public_domain;
 
 // ...
 
@@ -63,7 +63,7 @@ double **evects; // Store the eigenvectors here.
 int n = 5;
 Jacobi<double, double*, double**> eigen_calc(n);
 
-// Now, calculate the eigenvalues and eigenvectors
+// Now, calculate the eigenvalues and eigenvectors of M
 eigen_calc.Diagonalize(M, evals, evects);
 ```
 *(A complete working example can be found [here](tests/test.cpp).)*
