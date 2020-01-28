@@ -17,7 +17,7 @@ using namespace jacobi_public_domain;
 // are two numbers "similar"?
 template<typename T>
 inline static bool Similar(T a, T b, T eps=1.0e-06) {
-  return std::abs(a - b) < std::abs(eps);
+  return std::abs(a - b) < std::abs(eps) * std::sqrt(std::abs(a) * std::abs(b));
 }
 
 // are two vectors (containing n numbers) similar?
@@ -183,10 +183,11 @@ void TestJacobi(int n, //<! matrix size
   // Convert from base 10 to base e and (divide by 2)
   eval_magnitude_range *= std::log(10) * 0.5;
 
-  Jacobi<double, double*, double**> eigen_calc(n);
+  Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
 
   double *evals_known = new double[n];
   double *evals = new double[n];
+  double *test_evec = new double[n];
 
   // construct a trivial random generator engine from a time-based seed:
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -194,12 +195,11 @@ void TestJacobi(int n, //<! matrix size
   std::uniform_real_distribution<double> random_real01;
 
   double **M, **R, **Rt, **D, **tmp;
-  double *_M, *_R, *_Rt, *_D, *_tmp;
-  Alloc2D(n, n, &_M, &M);
-  Alloc2D(n, n, &_R, &R);
-  Alloc2D(n, n, &_Rt, &Rt);
-  Alloc2D(n, n, &_D, &D);
-  Alloc2D(n, n, &_tmp, &tmp);
+  Alloc2D(n, n, &M);
+  Alloc2D(n, n, &R);
+  Alloc2D(n, n, &Rt);
+  Alloc2D(n, n, &D);
+  Alloc2D(n, n, &tmp);
 
   for(int imat = 0; imat < n_matrices; imat++) {
 
@@ -270,28 +270,38 @@ void TestJacobi(int n, //<! matrix size
       }
 
       assert(SimilarVec(evals, evals_known, n, 1.0e-06));
-      for (int i = 0; i < n; i++)
-        assert(SimilarVecUnsigned(R[i], Rt[i], n, 1.0e-06));
+      //Check each eigenvector
+      for (int i = 0; i < n; i++) {
+        for (int a = 0; a < n; a++) {
+          test_evec[i] = 0.0;
+          for (int b = 0; b < n; b++)
+            test_evec[a] += M[a][b] * evec[i][b];
+          assert(Similar(test_evec[a], eval[i] * evec[i][a], 1.0e-06));
+        }
+      }
 
     } //for (int i_test = 0; i_test < n_tests_per_matrix; i++)
 
   } //for(int imat = 0; imat < n_matrices; imat++) {
 
-  Dealloc2D(&_M, &M);
-  Dealloc2D(&_R, &R);
-  Dealloc2D(&_Rt, &Rt);
-  Dealloc2D(&_D, &D);
-  Dealloc2D(&_tmp, &tmp);
+  Dealloc2D(&M);
+  Dealloc2D(&R);
+  Dealloc2D(&Rt);
+  Dealloc2D(&D);
+  Dealloc2D(&tmp);
   delete [] evals;
   delete [] evals_known;
+  delete [] test_evec;
+
 }
 
 
 int main(int argc, char **argv) {
   int n_size = 2;
   int n_matr = 1;
-  int n_tests = 1;
   double erange = 2.0;
+  int n_tests = 1;
+  int n_degeneracy = 1;
 
   if (argc <= 1) {
     cerr <<
@@ -320,8 +330,10 @@ int main(int argc, char **argv) {
     erange = std::stof(argv[3]);
   if (argc > 4)
     n_tests = std::stoi(argv[4]);
+  if (argc > 6)
+    n_degeneracy = std::stoi(argv[5]);
 
-  TestJacobi(n_size, n_matr, erange, n_tests);
+  TestJacobi(n_size, n_matr, erange, n_tests, n_degeneracy);
 
   cout << "test passed\n" << endl;
   return EXIT_SUCCESS;

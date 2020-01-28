@@ -18,11 +18,13 @@ namespace jacobi_public_domain {
 /// @note  The "Vector" and "Matrix" type arguments can be any 
 ///        C or C++ object that support indexing, including pointers or vectors.
 
-template<typename Scalar, typename Vector, typename Matrix>
+template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
+
 class Jacobi
 {
   int n;                   //!< the size of the matrix
   int *max_idx_row; //!< for row i, the index j of the maximum element where j>i
+  Scalar **M;              //!< local copy of the matrix being analyzed
   // Precomputed cosine, sin, and tangent of the most recent rotation angle:
   Scalar c;                //!< = cos(θ)
   Scalar s;                //!< = sin(θ)
@@ -51,10 +53,9 @@ public:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
   /// @returns The number_of_sweeps (= number_of_iterations / (n*(n-1)/2)).
   ///          If this equals max_num_sweeps, the algorithm failed to converge.
-  /// @note  The contents of the matrix M is modified during the calculation.
   /// @note  To reduce the computation time further, set calc_evects=false.
   int
-  Diagonalize(Matrix M,      //!< the matrix you wish to diagonalize (size n)
+  Diagonalize(ConstMatrix mat, //!< the matrix you wish to diagonalize (size n)
               Vector eval,   //!< store the eigenvalues here
               Matrix evec,   //!< store the eigenvectors here (in rows)
               SortCriteria sort_criteria=SORT_DECREASING_EVALS,//!<sort results?
@@ -125,8 +126,8 @@ private:
 
 
 template<typename Scalar, typename Vector, typename Matrix>
-int Jacobi<Scalar, Vector, Matrix>::
-Diagonalize(Matrix M,           // the matrix you wish to diagonalize (size n)
+int Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
+Diagonalize(ConstMatrix mat,    // the matrix you wish to diagonalize (size n)
             Vector eval,        // store the eigenvalues here
             Matrix evec,        // store the eigenvectors here (in rows)
             SortCriteria sort_criteria, // sort results?
@@ -134,6 +135,10 @@ Diagonalize(Matrix M,           // the matrix you wish to diagonalize (size n)
             int max_num_sweeps) // limit the number of iterations ("sweeps")
 {
   // -- Initialization --
+  for (int i = 0; i < n; i++)
+    for (int j = i; j < n; j++)          //copy mat[][] into M[][]
+      M[i][j] = mat[i][j];               //(M[][] is a local copy we can modify)
+
   if (calc_evec)
     for (int i = 0; i < n; i++)
       for (int j = 0; j < n; j++)        //Initialize the evec[][] matrix.
@@ -465,6 +470,7 @@ void Jacobi<Scalar, Vector, Matrix>::
 Alloc(int n) {
   this->n = n;
   max_idx_row = new int[n];
+  Alloc2D(n, n, &M);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
@@ -472,6 +478,7 @@ void Jacobi<Scalar, Vector, Matrix>::
 Dealloc() {
   if (max_idx_row)
     delete [] max_idx_row;
+  Dealloc2D(&M);
   Init();
 }
 
@@ -485,12 +492,18 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix>& source)
   std::copy(source.max_idx_row,
             source.max_idx_row + n,
             max_idx_row);
+  for (int i = 0; i < n; i++)
+    std::copy(source.M[i],
+              source.M[i] + n,
+              M[i]);
 }
 
 template<typename Scalar, typename Vector, typename Matrix>
 void Jacobi<Scalar, Vector, Matrix>::
 swap(Jacobi<Scalar, Vector, Matrix> &other) {
   std::swap(max_idx_row, other.max_idx_row);
+  for (int i = 0; i < n; i++)
+    std::swap(M[i], other.M[i]);
   std::swap(n, other.n);
 }
 

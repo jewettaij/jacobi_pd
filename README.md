@@ -61,7 +61,7 @@ double **evects; // Store the eigenvectors here.
 // Now create an instance of Jacobi ("eigen_calc").  This will allocate space
 // for storing intermediate calculations.  Once created, it can be reused
 // multiple times without incurring the cost of allocating memory on the heap.
-Jacobi<double, double*, double**> eigen_calc(n);
+Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
 
 // Now, calculate the eigenvalues and eigenvectors of M
 eigen_calc.Diagonalize(M, evals, evects);
