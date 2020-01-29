@@ -223,7 +223,9 @@ template <typename Scalar>
 void TestJacobi(int n, //<! matrix size
                 int n_matrices=100, //<! number of matrices to test
                 Scalar eval_magnitude_range=2.0, //<! range of eigevalues
-                int n_tests_per_matrix=1) //<! repeat test for benchmarking?
+                int n_tests_per_matrix=1, //<! repeat test for benchmarking?
+                unsigned seed=0 //<! random seed (if 0 then use the clock)
+                )
 {
   cout << endl << "-- Diagonalization test (real symmetric)  --" << endl;
 
@@ -232,8 +234,10 @@ void TestJacobi(int n, //<! matrix size
 
   Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> eigen_calc(n);
 
-  // construct a trivial random generator engine from a time-based seed:
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  // construct a random generator engine using a time-based seed:
+
+  if (seed == 0) // if the caller did not specify a seed, use the system clock
+    seed = std::chrono::system_clock::now().time_since_epoch().count();
   std::default_random_engine generator(seed);
   std::uniform_real_distribution<Scalar> random_real01;
 
@@ -326,13 +330,14 @@ int main(int argc, char **argv) {
   double erange = 2.0;
   int n_tests = 1;
   int n_degeneracy = 1;
+  unsigned seed = 0;
 
   if (argc <= 1) {
     cerr <<
       "Error: This program requires at least 1 argument.\n"
-      "Usage: n_size [n_matr n_tests erange]\n"
-      "           (The remaining 3 arguments are optional.)\n"
+      "Usage: n_size [n_matr n_tests erange n_degeneracy seed]\n"
       "       n_size  = the size of the matrices\n"
+      "           (The remaining arguments are optional.)\n"
       "       n_matr  = the number of randomly generated matrices to test\n"
       "       n_tests = the number of times the eigenvalues and eigenvectors\n"
       "                 are calculated for each matrix.  By default this is 1\n"
@@ -343,6 +348,9 @@ int main(int argc, char **argv) {
       "#                A value of 2 (default) produces eigenvalues in the range from"
       "                 1.0 up to 10.0 (This is a 2-orders-of-magnitude difference.)"
       "                 A value of 1 produces eigenvalues from 1/sqrt(10) to sqrt(10)."
+      "  n_degeneracy = the number of repeated eigenvalues (disabled by default)\n"
+      "          seed = the seed used by the random number generator.\n"
+      "                 (By default, the system clock is used.)\n"
          << endl;
     return 1;
   }
@@ -355,9 +363,11 @@ int main(int argc, char **argv) {
   if (argc > 4)
     n_tests = std::stoi(argv[4]);
   if (argc > 6)
-    n_degeneracy = std::stoi(argv[5]);
+    n_degeneracy = std::stoi(argv[6]);
+  if (argc > 7)
+    seed = std::stoi(argv[7]);
 
-  TestJacobi(n_size, n_matr, erange, n_tests, n_degeneracy);
+  TestJacobi(n_size, n_matr, erange, n_tests, n_degeneracy, seed);
 
   cout << "test passed\n" << endl;
   return EXIT_SUCCESS;
