@@ -45,7 +45,7 @@ inline static bool SimilarVecUnsigned(Vector a, Vector b, int n, Scalar eps=1.0e
 
 /// @brief  Multiply two matrices A and B, store the result in C. (C = AB).
 
-template<typename Scalar, typename Matrix, typename ConstMatrix>
+template<typename Matrix, typename ConstMatrix>
 void mmult(ConstMatrix A, //<! input array
            ConstMatrix B, //<! input array
            Matrix C,      //<! store result here
@@ -174,13 +174,14 @@ void GenRandOrth(Matrix R,
 template <typename Scalar, typename Vector, typename Matrix>
 void GenRandSymm(Matrix M, //<! store the matrix here
                  int n, //<! matrix size
-                 Scalar eval_magnitude_range=2.0,//<! range of wanted eigevalues
-                 int n_degeneracy=1,//<!number of repeated eigevalues(1disables)
-                 std::default_random_engine &generator,//<! makes random numbers
                  Vector evals,  //<! store the eigenvalues of here
-                 Matrix evects  //<! store the eigenvectors here
+                 Matrix evects,  //<! store the eigenvectors here
+                 std::default_random_engine &generator,//<! makes random numbers
+                 Scalar eval_magnitude_range=2.0,//<! range of wanted eigevalues
+                 int n_degeneracy=1//<!number of repeated eigevalues(1disables)
                  )
 {
+  std::uniform_real_distribution<Scalar> random_real01;
   Scalar  **D, **tmp;
   Alloc2D(n, n, &D);
   Alloc2D(n, n, &tmp);
@@ -224,6 +225,7 @@ void TestJacobi(int n, //<! matrix size
                 int n_matrices=100, //<! number of matrices to test
                 Scalar eval_magnitude_range=2.0, //<! range of eigevalues
                 int n_tests_per_matrix=1, //<! repeat test for benchmarking?
+                int n_degeneracy=1, //<! repeated eigenvalues?
                 unsigned seed=0 //<! random seed (if 0 then use the clock)
                 )
 {
@@ -239,7 +241,6 @@ void TestJacobi(int n, //<! matrix size
   if (seed == 0) // if the caller did not specify a seed, use the system clock
     seed = std::chrono::system_clock::now().time_since_epoch().count();
   std::default_random_engine generator(seed);
-  std::uniform_real_distribution<Scalar> random_real01;
 
   Scalar **M, **evects, **evects_known;
   Alloc2D(n, n, &M);
@@ -257,11 +258,11 @@ void TestJacobi(int n, //<! matrix size
 
     GenRandSymm<Scalar, Scalar*, Scalar**>(M,
                                            n,
-                                           eval_magnitude_range,
-                                           n_degeneracy,
-                                           generator,
                                            evals_known,
-                                           evects_known);
+                                           evects_known,
+                                           generator,
+                                           eval_magnitude_range,
+                                           n_degeneracy);
 
     // Sort the matrix evals and eigenvector rows
     SortRows<Scalar, Scalar*, Scalar**> (evals_known, evects_known, n);
@@ -305,8 +306,8 @@ void TestJacobi(int n, //<! matrix size
         for (int a = 0; a < n; a++) {
           test_evec[i] = 0.0;
           for (int b = 0; b < n; b++)
-            test_evec[a] += M[a][b] * evec[i][b];
-          assert(Similar(test_evec[a], eval[i] * evec[i][a], 1.0e-06));
+            test_evec[a] += M[a][b] * evects[i][b];
+          assert(Similar(test_evec[a], evals[i] * evects[i][a], 1.0e-06));
         }
       }
 
@@ -315,10 +316,10 @@ void TestJacobi(int n, //<! matrix size
   } //for(int imat = 0; imat < n_matrices; imat++) {
 
   Dealloc2D(&M);
-  Dealloc2D(&evects_known);
   Dealloc2D(&evects);
-  delete [] evals_known;
+  Dealloc2D(&evects_known);
   delete [] evals;
+  delete [] evals_known;
   delete [] test_evec;
 
 }
