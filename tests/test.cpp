@@ -14,13 +14,13 @@ using std::setprecision;
 using namespace matrix_alloc;
 using namespace jacobi_public_domain;
 
-// are two numbers "similar"?
+// @brief  Are two numbers "similar"?
 template<typename T>
 inline static bool Similar(T a, T b, T eps=1.0e-06) {
-  return std::abs(a - b) < std::abs(eps) * std::sqrt(std::abs(a) * std::abs(b));
+  return std::abs(a - b) <= std::abs(eps)*std::sqrt(std::abs(a)*std::abs(b));
 }
 
-// are two vectors (containing n numbers) similar?
+/// @brief  Are two vectors (containing n numbers) similar?
 template<typename Scalar, typename Vector>
 inline static bool SimilarVec(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
   for (int i = 0; i < n; i++)
@@ -29,7 +29,7 @@ inline static bool SimilarVec(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
   return true;
 }
 
-// are two vectors (or their reflections) similar?
+/// @brief  Are two vectors (or their reflections) similar?
 template<typename Scalar, typename Vector>
 inline static bool SimilarVecUnsigned(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
   if (SimilarVec(a, b, n, eps))
@@ -42,9 +42,39 @@ inline static bool SimilarVecUnsigned(Vector a, Vector b, int n, Scalar eps=1.0e
   }
 }
 
-//Sort the rows of a matrix "evec" by the numbers contained in "eval"
-//(This is a simple O(n^2) sorting method, but O(n^2) is a lower bound anyway.)
-//This is the same as the Jacobi::SortRows(), but that function is private.
+
+/// @brief  Multiply two matrices A and B, store the result in C. (C = AB).
+
+template<typename Scalar, typename Matrix, typename ConstMatrix>
+void mmult(ConstMatrix A, //<! input array
+           ConstMatrix B, //<! input array
+           Matrix C,      //<! store result here
+           int m,      //<! number of rows of A
+           int n=0,    //<! optional: number of columns of B (=m by default)
+           int K=0     //<! optional: number of columns of A = num rows of B (=m by default)
+           )
+{
+  assert((C != A) && (C != B));
+  if (n == 0) n = m; // if not specified, then assume the matrices are square
+  if (K == 0) K = m; // if not specified, then assume the matrices are square
+
+  for (int i = 0; i < m; i++)
+    for (int j = 0; j < n; j++)
+      C[i][j] = 0.0;
+
+  // perform matrix multiplication
+  for (int i = 0; i < m; i++)
+    for (int j = 0; j < n; j++)
+      for (int k = 0; k < K; k++)
+        C[i][j] += A[i][k] * B[k][j];
+}
+
+
+
+/// @brief
+///Sort the rows of a matrix "evec" by the numbers contained in "eval"
+///(This is a simple O(n^2) sorting method, but O(n^2) is a lower bound anyway.)
+///This is the same as the Jacobi::SortRows(), but that function is private.
 template<typename Scalar, typename Vector, typename Matrix>
 void
 SortRows(Vector eval,
@@ -81,8 +111,8 @@ SortRows(Vector eval,
 
 
 
-/// @brief
-/// Generate a random orthogonal n x n matrix
+/// @brief  Generate a random orthonormal n x n matrix
+
 template<typename Scalar, typename Matrix>
 void GenRandOrth(Matrix R,
                  int n,
@@ -128,47 +158,64 @@ void GenRandOrth(Matrix R,
 
 
 
+/// @brief  Generate a random symmetric n x n matrix, M.
+/// This function generates random numbers for the eigenvalues ("evals_known")
+/// as well as the eigenvectors ("evects_known"), and uses them to generate M.
+/// The "eval_magnitude_range" argument specifies the the base-10 logarithm
+/// of the range of eigenvalues desired.  The "n_degeneracy" argument specifies
+/// the number of repeated eigenvalues desired (if any).
+/// @returns  This function does not return a value.  However after it is
+///           invoked, the M matrix will be filled with random numbers.
+///           Additionally, the "evals" and "evects" arguments will contain
+///           the eigenvalues and eigenvectors (one eigenvector per row)
+///           of the matrix.  Later, they can be compared with the eigenvalues
+///           and eigenvectors calculated by Jacobi::Diagonalize()
 
-/// @brief
-/// Multiply two matrices A and B, store the result in C. (C = AB).
-
-template<typename Scalar>
-void mmult(Scalar const *const *A, //<! input array
-           Scalar const *const *B, //<! input array
-           Scalar** C,  //<! store result here
-           size_t m,    //<! number of rows of A
-           size_t n=0,  //<! optional: number of columns of B (=m by default)
-           size_t K=0   //<! optional: number of columns of A = num rows of B
-           )
+template <typename Scalar, typename Vector, typename Matrix>
+void GenRandSymm(Matrix M, //<! store the matrix here
+                 int n, //<! matrix size
+                 Scalar eval_magnitude_range=2.0,//<! range of wanted eigevalues
+                 int n_degeneracy=1,//<!number of repeated eigevalues(1disables)
+                 std::default_random_engine &generator,//<! makes random numbers
+                 Vector evals,  //<! store the eigenvalues of here
+                 Matrix evects  //<! store the eigenvectors here
+                 )
 {
-  assert(A != C);
-  if (n == 0) n = m; // if not specified, assume matrix is square
-  if (K == 0) K = m; // if not specified, assume matrix is square
+  Scalar  **D, **tmp;
+  Alloc2D(n, n, &D);
+  Alloc2D(n, n, &tmp);
 
-  for (size_t i = 0; i < m; i++)
-    for (size_t j = 0; j < n; j++)
-      C[i][j] = 0.0;
+  // D is a diagonal matrix whose diagonal elements are the eigenvalues
+  for (int i = 0; i < n; i++)
+    for (int j = 0; j < n; j++)
+      D[i][j] = 0.0;
 
-  // perform matrix multiplication
-  for (size_t i = 0; i < m; i++)
-    for (size_t j = 0; j < n; j++)
-      for (size_t k = 0; k < K; k++)
-        C[i][j] += A[i][k] * B[k][j];
-}
-
-
-template <typename Scalar>
-static inline void MatProduct3(Scalar const* const *A,
-                               Scalar const* const *B,
-                               Scalar **dest) {
-  for (int i=0; i<3; i++) {
-    for (int j=0; j<3; j++) {
-      dest[i][j] = 0.0;
-      for (int k=0; k<3; k++)
-        dest[i][j] += A[i][k] * B[k][j];
-    }
+  // Randomly generate the eigenvalues
+  for (int i = 0; i < n; i++) {
+    // generate some random eigenvalues
+    // Use a "log-uniform distribution" (a.k.a. "reciprocal distribution")
+    // (This is a way to specify numbers with a precise range of magnitudes.)
+    Scalar rand_erange = (random_real01(generator)-0.5); // a number between [-0.5,0.5]
+    rand_erange *= eval_magnitude_range; // scale this by eval_magnitude_range
+    evals[i] = std::exp(rand_erange*std::log(10.0));
+    // also consider both positive and negative eigenvalues:
+    if (random_real01(generator) < 0.5)
+      evals[i] = -evals[i];
+    D[i][i] = evals[i];
   }
-}
+
+  // Now randomly generate the R and Rt matrices (ie. the eigenvectors):
+  GenRandOrth<Scalar, Matrix>(evects, n, generator);
+
+  // Construct the test matrix, M, where M = Rt * D * R
+  mmult(evects, D, tmp, n);
+  for (int i = 0; i < n; i++)
+    for (int j = 0; j < n; j++)
+      evects[i][j] = evects[j][i]; //transpose "evects"
+  mmult(tmp, evects, M, n);  //at this point M = Rt * D * R (where "R"="evects")
+  Dealloc2D(&D);
+  Dealloc2D(&tmp);
+} // GenRandSymm()
 
 
 
@@ -183,58 +230,37 @@ void TestJacobi(int n, //<! matrix size
   // Convert from base 10 to base e and (divide by 2)
   eval_magnitude_range *= std::log(10) * 0.5;
 
-  Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
-
-  double *evals_known = new double[n];
-  double *evals = new double[n];
-  double *test_evec = new double[n];
+  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> eigen_calc(n);
 
   // construct a trivial random generator engine from a time-based seed:
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   std::default_random_engine generator(seed);
-  std::uniform_real_distribution<double> random_real01;
+  std::uniform_real_distribution<Scalar> random_real01;
 
-  double **M, **R, **Rt, **D, **tmp;
+  Scalar **M, **evects, **evects_known;
   Alloc2D(n, n, &M);
-  Alloc2D(n, n, &R);
-  Alloc2D(n, n, &Rt);
-  Alloc2D(n, n, &D);
-  Alloc2D(n, n, &tmp);
+  Alloc2D(n, n, &evects);
+  Alloc2D(n, n, &evects_known);
+  Scalar *evals = new Scalar[n];
+  Scalar *evals_known = new Scalar[n];
+  Scalar *test_evec = new Scalar[n];
 
   for(int imat = 0; imat < n_matrices; imat++) {
 
-    // Randomly generate the eigenvalues
+    // Create a randomly generated symmetric matrix.
+    //This function generates random numbers for the eigenvalues ("evals_known")
+    //as well as the eigenvectors ("evects_known"), and uses them to generate M.
 
-    // D is a diagonal matrix whose diagonal elements are the eigenvalues
-    for (int i = 0; i < n; i++)
-      for (int j = 0; j < n; j++)
-        D[i][j] = 0.0;
-    for (int i = 0; i < n; i++) {
-      // generate some random eigenvalues
-      // Use a "log-uniform distribution" (a.k.a. "reciprocal distribution")
-      // (This is a way to specify numbers with a precise range of magnitudes.)
-      double rand_erange = (random_real01(generator)-0.5); // a number between [-0.5,0.5]
-      rand_erange *= eval_magnitude_range; // scale this by eval_magnitude_range
-      evals_known[i] = std::exp(rand_erange*std::log(10.0));
-      // also consider both positive and negative eigenvalues:
-      if (random_real01(generator) < 0.5)
-        evals_known[i] = -evals_known[i];
-      D[i][i] = evals_known[i];
-    }
-
-    // Now randomly generate the R and Rt matrices (ie. the eigenvectors):
-    GenRandOrth<double, double**>(R, n, generator);
-    // Rt is the transpose of R
-    for (int i = 0; i < n; i++)
-      for (int j = 0; j < n; j++)
-        Rt[i][j] = R[j][i];
-
-    // Construct the test matrix, M, where M = Rt * D * R
-    mmult(Rt, D, tmp, n);
-    mmult(tmp, R, M, n);
+    GenRandSymm<Scalar, Scalar*, Scalar**>(M,
+                                           n,
+                                           eval_magnitude_range,
+                                           n_degeneracy,
+                                           generator,
+                                           evals_known,
+                                           evects_known);
 
     // Sort the matrix evals and eigenvector rows
-    SortRows<double, double*, double**> (evals_known, R, n);
+    SortRows<Scalar, Scalar*, Scalar**> (evals_known, evects_known, n);
 
     if (n_matrices == 1) {
       cout << "Eigenvalues (after sorting):\n";
@@ -244,7 +270,7 @@ void TestJacobi(int n, //<! matrix size
       cout << "Eigenvectors (rows) which are known in advance:\n";
       for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++)
-          cout << R[i][j] << " ";
+          cout << evects_known[i][j] << " ";
         cout << "\n";
       }
       cout << "  (The eigenvectors calculated by Jacobi::Diagonalize() should match these.)\n";
@@ -253,7 +279,7 @@ void TestJacobi(int n, //<! matrix size
     for (int i_test = 0; i_test < n_tests_per_matrix; i_test++) {
 
       // Now, calculate the eigenvalues and eigenvectors
-      int n_sweeps = eigen_calc.Diagonalize(M, evals, Rt);
+      int n_sweeps = eigen_calc.Diagonalize(M, evals, evects);
 
       if ((n_matrices == 1) && (i_test == 0)) {
         cout <<"Jacobi::Diagonalize() ran for "<<n_sweeps<<" iters (sweeps).\n";
@@ -264,7 +290,7 @@ void TestJacobi(int n, //<! matrix size
         cout << "Eigenvectors (rows) calculated by Jacobi::Diagonalize()\n";
         for (int i = 0; i < n; i++) {
           for (int j = 0; j < n; j++)
-            cout << Rt[i][j] << " ";
+            cout << evects[i][j] << " ";
           cout << "\n";
         }
       }
@@ -285,12 +311,10 @@ void TestJacobi(int n, //<! matrix size
   } //for(int imat = 0; imat < n_matrices; imat++) {
 
   Dealloc2D(&M);
-  Dealloc2D(&R);
-  Dealloc2D(&Rt);
-  Dealloc2D(&D);
-  Dealloc2D(&tmp);
-  delete [] evals;
+  Dealloc2D(&evects_known);
+  Dealloc2D(&evects);
   delete [] evals_known;
+  delete [] evals;
   delete [] test_evec;
 
 }

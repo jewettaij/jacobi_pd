@@ -16,7 +16,7 @@ This remains one of the oldest and most popular algorithms for
 diagonalizing dense, square, real, symmetric matrices.
 
 The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
-vector\<vector\<X\>\>, fixed-size arrays,
+vector\<vector\<X\>\>, array\<array\<x\>\>, fixed-size arrays,
 or any other C or C++ object which supports double-indexing.
 (Here **X** is any real numeric type.  Complex numbers are not supported.)
 
@@ -79,7 +79,8 @@ This is a header-only library.
 # Development Status: *alpha*
 
 As of 2020-1-23, basic functionality appears to be working.
-More testing is needed including tests for memory leaks and profiling.
+More testing is needed including tests for copy constructors,
+memory leaks and profiling.
 The API might change slightly, but existing code built using
 it should still work.
 (Later I might add "const" to the first argument of Jacobi::Diagonalize().)
