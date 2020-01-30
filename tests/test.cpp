@@ -209,10 +209,10 @@ void GenRandSymm(Matrix M, //<! store the matrix here
   GenRandOrth<Scalar, Matrix>(evects, n, generator);
 
   // Construct the test matrix, M, where M = Rt * D * R
-  mmult(evects, D, tmp, n);
-  for (int i = 0; i < n; i++)
-    for (int j = 0; j < n; j++)
-      evects[i][j] = evects[j][i]; //transpose "evects"
+  mmult(evects, D, tmp, n);  //tmp = Rt * D
+  for (int i = 0; i < n-1; i++)
+    for (int j = i+1; j < n; j++)
+      std::swap(evects[i][j], evects[j][i]); //transpose "evects"
   mmult(tmp, evects, M, n);  //at this point M = Rt * D * R (where "R"="evects")
   Dealloc2D(&D);
   Dealloc2D(&tmp);
@@ -304,7 +304,7 @@ void TestJacobi(int n, //<! matrix size
       //Check each eigenvector
       for (int i = 0; i < n; i++) {
         for (int a = 0; a < n; a++) {
-          test_evec[i] = 0.0;
+          test_evec[a] = 0.0;
           for (int b = 0; b < n; b++)
             test_evec[a] += M[a][b] * evects[i][b];
           assert(Similar(test_evec[a], evals[i] * evects[i][a], 1.0e-06));

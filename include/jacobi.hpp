@@ -459,6 +459,7 @@ template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 Init() {
   n = 0;
+  M = nullptr;
   max_idx_row = nullptr;
 }
 
