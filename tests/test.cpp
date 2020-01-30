@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <chrono>
 #include <random>
+#include <algorithm>
 #include "matrix_alloc.hpp"
 #include "jacobi.hpp"
 
@@ -17,7 +18,9 @@ using namespace jacobi_public_domain;
 // @brief  Are two numbers "similar"?
 template<typename T>
 inline static bool Similar(T a, T b, T eps=1.0e-06) {
-  return std::abs(a - b) <= std::abs(eps)*std::sqrt(std::abs(a)*std::abs(b));
+  return ((std::abs(a-b) <= std::abs(eps))
+          ||
+          (std::abs(a-b) <= std::abs(eps)*std::sqrt(std::abs(a)*std::abs(b))));
 }
 
 /// @brief  Are two vectors (containing n numbers) similar?
@@ -186,11 +189,6 @@ void GenRandSymm(Matrix M, //<! store the matrix here
   Alloc2D(n, n, &D);
   Alloc2D(n, n, &tmp);
 
-  // D is a diagonal matrix whose diagonal elements are the eigenvalues
-  for (int i = 0; i < n; i++)
-    for (int j = 0; j < n; j++)
-      D[i][j] = 0.0;
-
   // Randomly generate the eigenvalues
   for (int i = 0; i < n; i++) {
     // generate some random eigenvalues
@@ -202,11 +200,26 @@ void GenRandSymm(Matrix M, //<! store the matrix here
     // also consider both positive and negative eigenvalues:
     if (random_real01(generator) < 0.5)
       evals[i] = -evals[i];
-    D[i][i] = evals[i];
   }
 
-  // Now randomly generate the R and Rt matrices (ie. the eigenvectors):
-  GenRandOrth<Scalar, Matrix>(evects, n, generator);
+  // Does the user want us to force some of the eigenvalues to be the same?
+  if (n_degeneracy > 1) {
+    unsigned *permutation = new unsigned[n]; //a random permutation from 0...n-1
+    for (int i = 0; i < n; i++)
+      permutation[i] = i;
+    std::shuffle(permutation, permutation+n, generator);
+    for (int i = 1; i < n_degeneracy; i++) //set the first n_degeneracy to same
+      evals[permutation[i]] = evals[permutation[0]];
+    delete [] permutation;
+  }
+
+  // D is a diagonal matrix whose diagonal elements are the eigenvalues
+  for (int i = 0; i < n; i++)
+    for (int j = 0; j < n; j++)
+      D[i][j] = ((i == j) ? evals[i] : 0.0);
+
+  // Now randomly generate the (transpose of) the "evects" matrix
+  GenRandOrth<Scalar, Matrix>(evects, n, generator); //(will transpose it later)
 
   // Construct the test matrix, M, where M = Rt * D * R
   mmult(evects, D, tmp, n);  //tmp = Rt * D
@@ -301,7 +314,8 @@ void TestJacobi(int n, //<! matrix size
       }
 
       assert(SimilarVec(evals, evals_known, n, 1.0e-06));
-      //Check each eigenvector
+      //Check that each eigenvector behaves like an eigenvector
+      //   Σ_b  M[a][b]*evects[i][b] = evals[i]*evects[i][b]   (for all a)
       for (int i = 0; i < n; i++) {
         for (int a = 0; a < n; a++) {
           test_evec[a] = 0.0;
@@ -322,7 +336,7 @@ void TestJacobi(int n, //<! matrix size
   delete [] evals_known;
   delete [] test_evec;
 
-}
+} //TestJacobi()
 
 
 int main(int argc, char **argv) {
@@ -363,10 +377,10 @@ int main(int argc, char **argv) {
     erange = std::stof(argv[3]);
   if (argc > 4)
     n_tests = std::stoi(argv[4]);
+  if (argc > 5)
+    n_degeneracy = std::stoi(argv[5]);
   if (argc > 6)
-    n_degeneracy = std::stoi(argv[6]);
-  if (argc > 7)
-    seed = std::stoi(argv[7]);
+    seed = std::stoi(argv[6]);
 
   TestJacobi(n_size, n_matr, erange, n_tests, n_degeneracy, seed);
 

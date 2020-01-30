@@ -20,7 +20,14 @@ matrix:
         - ./test_jacobi 4 1000 3.0
         - ./test_jacobi 5 1000 3.0
         - ./test_jacobi 10 100 3.0
-        - ./test_jacobi 50 20 3.0
+        - ./test_jacobi 30 20 3.0
+        #- now test with degenerate eigenvalues
+        - ./test_jacobi 2 1000 3.0 2
+        - ./test_jacobi 3 1000 3.0 2
+        - ./test_jacobi 4 1000 3.0 2
+        - ./test_jacobi 5 1000 3.0 3
+        - ./test_jacobi 10 100 3.0 5
+        - ./test_jacobi 30 20 3.0 20
         - cd ../
 
     - language: cpp
@@ -38,6 +45,13 @@ matrix:
         - ./test_jacobi 4 1000 3.0
         - ./test_jacobi 5 1000 3.0
         - ./test_jacobi 10 100 3.0
-        - ./test_jacobi 50 20 3.0
+        - ./test_jacobi 30 20 3.0
+        #- now test with degenerate eigenvalues
+        - ./test_jacobi 2 1000 3.0 2
+        - ./test_jacobi 3 1000 3.0 2
+        - ./test_jacobi 4 1000 3.0 2
+        - ./test_jacobi 5 1000 3.0 3
+        - ./test_jacobi 10 100 3.0 5
+        - ./test_jacobi 30 20 3.0 20
         - cd ../
 

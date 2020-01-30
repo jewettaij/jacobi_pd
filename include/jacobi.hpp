@@ -27,7 +27,7 @@ class Jacobi
 {
   int n;            //!< the size of the matrix
   Scalar **M;       //!< local copy of the matrix being analyzed
-  // Precomputed cosine, sin, and tangent of the most recent rotation angle:
+  // Precomputed cosine, sine, and tangent of the most recent rotation angle:
   Scalar c;         //!< = cos(θ)
   Scalar s;         //!< = sin(θ)
   Scalar t;         //!< = tan(θ),  (note |t|<=1)
@@ -222,12 +222,12 @@ CalcRot(Matrix M,    // matrix
 }
 
 
-/// brief   Perform a similarity transform by multiplying matrix M on both
-///         sides by a rotation matrix (transposing one of them).
+/// brief   Perform a similarity transformation by multiplying matrix M on both
+///         sides by a rotation matrix (and its transpose).
 ///         This rotation matrix performs a rotation in the i,j plane by
-///         angle θ.  Also updates the max_idx_row[] array.  Assumes i < j.
-/// details This function assumes that i<j and that cos(θ), sin(θ), and tan(θ)
-///         have already been computed (by invoking CalcRot()).
+///         angle θ.  This function assumes that c=cos(θ). s=som(θ), t=tan(θ)
+///         have been calculated in advance (using the CalcRot() function).
+///         It also assumes that i<j.  The max_idx_row[] array is also updated.
 ///         To save time, since the matrix is symmetric, the elements
 ///         below the diagonal (ie. M[u][v] where u>v) are not computed.
 /// @code

@@ -65,8 +65,6 @@ void Alloc2D(int nrows,             //!< size of the array (outer)
 template<typename Entry>
 void Dealloc2D(Entry ***paaX)        //!< pointer to 2-D multidimensional array
 {
-  //*paaX = new Entry* [size[0]];
-  //(*paaX)[0] = new Entry [size[0] * size[1]];
   if (paaX && *paaX) {
     delete [] (*paaX)[0];
     delete [] (*paaX);

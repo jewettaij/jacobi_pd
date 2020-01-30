@@ -78,13 +78,11 @@ This is a header-only library.
 
 # Development Status: *alpha*
 
-As of 2020-1-23, basic functionality appears to be working.
+As of 2020-1-29, basic functionality appears to be working.
 More testing is needed including tests for copy constructors,
 memory leaks and profiling.
 The API might change slightly, but existing code built using
 it should still work.
-(Later I might add "const" to the first argument of Jacobi::Diagonalize().)
-
 
 ## License
 
