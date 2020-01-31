@@ -16,7 +16,7 @@ matrix:
         #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
-        - g++ -g -O0 --coverage -I../include -o test_jacobi test.cpp
+        - g++ -g -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline -I../include -o test_jacobi test.cpp
         # Note: With such a huge spread of eigenvalue magnitudes(1e-09..1e+09),
         # some of the smaller eigenvalues (and their corresponding eigenvectors)
         # will be calculated incorrectly due to numeric underflow.
@@ -45,7 +45,7 @@ matrix:
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
       after_success:
-        - coveralls --exclude lib --exclude tests --gcov-options '\-lp'
+        - coveralls --root . --exclude tests
 
     - language: cpp
       compiler: clang
@@ -58,7 +58,7 @@ matrix:
         #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
-        - clang++ -g -O0 --coverage -I../include -o test_jacobi test.cpp
+        - clang++ -g -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline -I../include -o test_jacobi test.cpp
         #- cppcheck --quiet --error-exitcode=1
         # Note: With such a huge spread of eigenvalue magnitudes(1e-09..1e+09),
         # some of the smaller eigenvalues (and their corresponding eigenvectors)
@@ -86,5 +86,5 @@ matrix:
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
       after_success:
-        - coveralls --exclude lib --exclude tests --gcov-options '\-lp'
+        - coveralls --root . --exclude tests
 

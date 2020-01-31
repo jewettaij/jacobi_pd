@@ -1,11 +1,13 @@
 # compiled binaries
 *.so *.o
+test_jacobi
 
 # coveralls files
 *.gcno *.gcda
-test_jacobi
+.coverage
+
+# python environments
+venv
 
 # text-editor temporary files:
 *~
-
-
