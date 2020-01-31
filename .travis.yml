@@ -22,18 +22,15 @@ matrix:
         # eigenvalues are considered important.
         #- cppcheck --quiet --error-exitcode=1
         - ./test_jacobi 2 1000 1e-09 1e+09
-        - ./test_jacobi 3 1000 1e-09 1e+09
-        - ./test_jacobi 4 1000 1e-09 1e+09
         - ./test_jacobi 5 1000 1e-09 1e+09
-        - ./test_jacobi 10 100 1e-09 1e+09
-        - ./test_jacobi 30 50 1e-09 1e+09
+        - ./test_jacobi 20 100 1e-09 1e+09
         #- now test again with degenerate eigenvalues
         - ./test_jacobi 2 1000 1e-09 1e+09 2
-        - ./test_jacobi 3 1000 1e-09 1e+09 2
-        - ./test_jacobi 4 1000 1e-09 1e+09 2
-        - ./test_jacobi 5 1000 1e-09 1e+09 3
-        - ./test_jacobi 10 100 1e-09 1e+09 5
-        - ./test_jacobi 30 50 1e-09 1e+09 20
+        - ./test_jacobi 5 1000 1e-09 1e+09 2
+        - ./test_jacobi 20 100 1e-09 1e+09 5
+        #- now use valgrind to find memory leaks and other errors:
+        - valgrind --leak-check=full --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
+        - valgrind --leak-check=full --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
         - cd ../
 
     - language: cpp
@@ -53,17 +50,13 @@ matrix:
         # Only errors which are within machine precision of the largest
         # eigenvalues are considered important.
         - ./test_jacobi 2 1000 1e-09 1e+09
-        - ./test_jacobi 3 1000 1e-09 1e+09
-        - ./test_jacobi 4 1000 1e-09 1e+09
         - ./test_jacobi 5 1000 1e-09 1e+09
-        - ./test_jacobi 10 100 1e-09 1e+09
-        - ./test_jacobi 30 50 1e-09 1e+09
+        - ./test_jacobi 20 100 1e-09 1e+09
         #- now test again with degenerate eigenvalues
         - ./test_jacobi 2 1000 1e-09 1e+09 2
-        - ./test_jacobi 3 1000 1e-09 1e+09 2
-        - ./test_jacobi 4 1000 1e-09 1e+09 2
-        - ./test_jacobi 5 1000 1e-09 1e+09 3
-        - ./test_jacobi 10 100 1e-09 1e+09 5
-        - ./test_jacobi 30 50 1e-09 1e+09 20
+        - ./test_jacobi 5 1000 1e-09 1e+09 2
+        - ./test_jacobi 20 100 1e-09 1e+09 5
+        - valgrind --leak-check=full --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
+        - valgrind --leak-check=full --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
         - cd ../
 

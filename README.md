@@ -16,7 +16,7 @@ This remains one of the oldest and most popular algorithms for
 diagonalizing dense, square, real, symmetric matrices.
 
 The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
-vector\<vector\<X\>\>, array\<array\<x\>\>, fixed-size arrays,
+vector\<vector\<X\>\>, array\<array\<X\>\>, fixed-size arrays,
 or any other C or C++ object which supports double-indexing.
 (Here **X** is any real numeric type.  Complex numbers are not supported.)
 
@@ -78,12 +78,15 @@ This is a header-only library.
 
 # Development Status: *beta*
 
-As of 2020-1-30, the eigensolver is working efficiently with a wide range of
-matrix sizes, eigenvalue magnitudes, and degeneracies.
-More testing is needed including tests for copy constructors,
-memory leaks and profiling.
-It is unlikely, but possible that the API might change slightly.
-If that happens, existing code built using this library should still work.
+As of 2020-1-30, the eigensolver is now free of memory leaks
+and is working quickly and efficiently over a wide range of
+matrix sizes, eigenvalue magnitudes (and degeneracies).
+More testing is needed for profiling and testing using alternate matrix types
+(ie vector<vector<X>> and array<array<X>>).
+
+C++11:  As of 2020-1-30, a move constructor and move assignment operator
+have yet to be written.
+
 
 ## License
 

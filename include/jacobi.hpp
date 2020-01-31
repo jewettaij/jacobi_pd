@@ -42,6 +42,10 @@ public:
     SetSize(n);
   }
 
+  ~Jacobi() {
+    Dealloc();
+  }
+
   // @typedef choose the criteria for sorting eigenvalues and eigenvectors
   typedef enum eSortCriteria {
     DO_NOT_SORT,
@@ -114,6 +118,7 @@ private:
   void Init();
   void Dealloc();
 
+public:
   // memory management: copy constructor, swap, and assignment operator
   Jacobi(const Jacobi<Scalar, Vector, Matrix, ConstMatrix>& source);
   void swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other);
@@ -466,6 +471,7 @@ Init() {
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 SetSize(int n) {
+  assert(n >= 2);
   Dealloc();
   Alloc(n);
 }
@@ -474,8 +480,10 @@ template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 Alloc(int n) {
   this->n = n;
-  max_idx_row = new int[n];
-  Alloc2D(n, n, &M);
+  if (n > 0) {
+    max_idx_row = new int[n];
+    Alloc2D(n, n, &M);
+  }
 }
 
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
@@ -492,8 +500,11 @@ Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 Jacobi(const Jacobi<Scalar, Vector, Matrix, ConstMatrix>& source)
 {
   Init();
-  Alloc(source.n);
+  SetSize(source.n);
   assert(n == source.n);
+  // The following lines aren't really necessary, because the contents
+  // of source.M and source.max_idx_row are not needed (since they are
+  // overwritten every time Jacobi::Diagonalize() is invoked).
   std::copy(source.max_idx_row,
             source.max_idx_row + n,
             max_idx_row);
@@ -506,12 +517,12 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix, ConstMatrix>& source)
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other) {
-  std::swap(max_idx_row, other.max_idx_row);
-  for (int i = 0; i < n; i++)
-    std::swap(M[i], other.M[i]);
   std::swap(n, other.n);
+  std::swap(max_idx_row, other.max_idx_row);
+  std::swap(M, other.M);
 }
 
+// Using the "copy-swap" idiom for the assignment operator (=)
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 Jacobi<Scalar, Vector, Matrix, ConstMatrix>&
 Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
@@ -519,8 +530,6 @@ operator = (Jacobi<Scalar, Vector, Matrix, ConstMatrix> source) {
   this->swap(source);
   return *this;
 }
-
-
 
 } // namespace jacobi
 

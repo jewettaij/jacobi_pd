@@ -213,7 +213,7 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
 
   // Does the user want us to force some of the eigenvalues to be the same?
   if (n_degeneracy > 1) {
-    unsigned *permutation = new unsigned[n]; //a random permutation from 0...n-1
+    int *permutation = new int[n]; //a random permutation from 0...n-1
     for (int i = 0; i < n; i++)
       permutation[i] = i;
     std::shuffle(permutation, permutation+n, generator);
@@ -254,7 +254,19 @@ void TestJacobi(int n, //<! matrix size
 {
   cout << endl << "-- Diagonalization test (real symmetric)  --" << endl;
 
-  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> eigen_calc(n);
+  // Note: Normally, you would just use this to instantiate Jacobi:
+  // Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc(n);
+  //
+  // ..but since Jacobi manages its own memory using new and delete, I also want
+  // to test that the copy constructors, copy operators, and destructors work.
+  // The following lines do this.  (Run this using "valgrind".)
+  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc_test_mem1(n);
+  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc_test_mem2(2);
+  // test the = operator
+  ecalc_test_mem2 = ecalc_test_mem1;
+  // test the copy constructor
+  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc(ecalc_test_mem2);
+
 
   // construct a random generator engine using a time-based seed:
 
@@ -304,8 +316,8 @@ void TestJacobi(int n, //<! matrix size
 
     for (int i_test = 0; i_test < n_tests_per_matrix; i_test++) {
 
-      // Now, calculate the eigenvalues and eigenvectors
-      int n_sweeps = eigen_calc.Diagonalize(M, evals, evects);
+      // Now (finally) calculate the eigenvalues and eigenvectors
+      int n_sweeps = ecalc.Diagonalize(M, evals, evects);
 
       if ((n_matrices == 1) && (i_test == 0)) {
         cout <<"Jacobi::Diagonalize() ran for "<<n_sweeps<<" iters (sweeps).\n";
