@@ -76,13 +76,14 @@ to a location in your
 No linking is necessary.
 This is a header-only library.
 
-# Development Status: *alpha*
+# Development Status: *beta*
 
-As of 2020-1-29, basic functionality appears to be working.
+As of 2020-1-30, the eigensolver is working efficiently with a wide range of
+matrix sizes, eigenvalue magnitudes, and degeneracies.
 More testing is needed including tests for copy constructors,
 memory leaks and profiling.
-The API might change slightly, but existing code built using
-it should still work.
+It is unlikely, but possible that the API might change slightly.
+If that happens, existing code built using this library should still work.
 
 ## License
 
