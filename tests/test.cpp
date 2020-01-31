@@ -16,30 +16,36 @@ using namespace matrix_alloc;
 using namespace jacobi_public_domain;
 
 // @brief  Are two numbers "similar"?
-template<typename T>
-inline static bool Similar(T a, T b, T eps=1.0e-06) {
-  return ((std::abs(a-b) <= std::abs(eps))
+template<typename Scalar>
+inline static bool Similar(Scalar a, Scalar b,
+                           Scalar eps=1.0e-06, Scalar ratio=1.0e-06)
+{
+  return ((std::abs(a-b)<=std::abs(eps))
           ||
-          (std::abs(a-b) <= std::abs(eps)*std::sqrt(std::abs(a)*std::abs(b))));
+          (std::abs(a-b)<=std::abs(ratio)*0.5*(std::abs(a)+std::abs(b))));
 }
 
 /// @brief  Are two vectors (containing n numbers) similar?
 template<typename Scalar, typename Vector>
-inline static bool SimilarVec(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
+inline static bool SimilarVec(Vector a, Vector b, int n,
+                              Scalar eps=1.0e-06, Scalar ratio=1.0e-06)
+{
   for (int i = 0; i < n; i++)
-    if (not Similar(a[i], b[i], eps))
+    if (not Similar(a[i], b[i], eps, ratio))
       return false;
   return true;
 }
 
 /// @brief  Are two vectors (or their reflections) similar?
 template<typename Scalar, typename Vector>
-inline static bool SimilarVecUnsigned(Vector a, Vector b, int n, Scalar eps=1.0e-06) {
+inline static bool SimilarVecUnsigned(Vector a, Vector b, int n,
+                                      Scalar eps=1.0e-06, Scalar ratio=1.0e-06)
+{
   if (SimilarVec(a, b, n, eps))
     return true;
   else {
     for (int i = 0; i < n; i++)
-      if (not Similar(a[i], -b[i], eps))
+      if (not Similar(a[i], -b[i], eps, ratio))
         return false;
     return true;
   }
@@ -175,15 +181,17 @@ void GenRandOrth(Matrix R,
 ///           and eigenvectors calculated by Jacobi::Diagonalize()
 
 template <typename Scalar, typename Vector, typename Matrix>
-void GenRandSymm(Matrix M, //<! store the matrix here
-                 int n, //<! matrix size
-                 Vector evals,  //<! store the eigenvalues of here
+void GenRandSymm(Matrix M,       //<! store the matrix here
+                 int n,          //<! matrix size
+                 Vector evals,   //<! store the eigenvalues of here
                  Matrix evects,  //<! store the eigenvectors here
                  std::default_random_engine &generator,//<! makes random numbers
-                 Scalar eval_magnitude_range=2.0,//<! range of wanted eigevalues
+                 Scalar min_eval_size=0.1, //<! minimum possible eigenvalue size
+                 Scalar max_eval_size=10.0,//<! maximum possible eigenvalue size
                  int n_degeneracy=1//<!number of repeated eigevalues(1disables)
                  )
 {
+  assert(n_degeneracy <= n);
   std::uniform_real_distribution<Scalar> random_real01;
   Scalar  **D, **tmp;
   Alloc2D(n, n, &D);
@@ -191,12 +199,13 @@ void GenRandSymm(Matrix M, //<! store the matrix here
 
   // Randomly generate the eigenvalues
   for (int i = 0; i < n; i++) {
-    // generate some random eigenvalues
     // Use a "log-uniform distribution" (a.k.a. "reciprocal distribution")
     // (This is a way to specify numbers with a precise range of magnitudes.)
-    Scalar rand_erange = (random_real01(generator)-0.5); // a number between [-0.5,0.5]
-    rand_erange *= eval_magnitude_range; // scale this by eval_magnitude_range
-    evals[i] = std::exp(rand_erange*std::log(10.0));
+    assert((min_eval_size > 0.0) && (max_eval_size > 0.0));
+    Scalar log_min = std::log(std::abs(min_eval_size));
+    Scalar log_max = std::log(std::abs(max_eval_size));
+    Scalar log_eval = (log_min + random_real01(generator)*(log_max-log_min));
+    evals[i] = std::exp(log_eval);
     // also consider both positive and negative eigenvalues:
     if (random_real01(generator) < 0.5)
       evals[i] = -evals[i];
@@ -236,16 +245,14 @@ void GenRandSymm(Matrix M, //<! store the matrix here
 template <typename Scalar>
 void TestJacobi(int n, //<! matrix size
                 int n_matrices=100, //<! number of matrices to test
-                Scalar eval_magnitude_range=2.0, //<! range of eigevalues
+                Scalar min_eval_size=0.1,  //<! minimum possible eigenvalue sizw
+                Scalar max_eval_size=10.0, //<! maximum possible eigenvalue size
                 int n_tests_per_matrix=1, //<! repeat test for benchmarking?
                 int n_degeneracy=1, //<! repeated eigenvalues?
                 unsigned seed=0 //<! random seed (if 0 then use the clock)
                 )
 {
   cout << endl << "-- Diagonalization test (real symmetric)  --" << endl;
-
-  // Convert from base 10 to base e and (divide by 2)
-  eval_magnitude_range *= std::log(10) * 0.5;
 
   Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> eigen_calc(n);
 
@@ -274,7 +281,8 @@ void TestJacobi(int n, //<! matrix size
                                            evals_known,
                                            evects_known,
                                            generator,
-                                           eval_magnitude_range,
+                                           min_eval_size,
+                                           max_eval_size,
                                            n_degeneracy);
 
     // Sort the matrix evals and eigenvector rows
@@ -312,16 +320,17 @@ void TestJacobi(int n, //<! matrix size
           cout << "\n";
         }
       }
-
-      assert(SimilarVec(evals, evals_known, n, 1.0e-06));
-      //Check that each eigenvector behaves like an eigenvector
-      //   Σ_b  M[a][b]*evects[i][b] = evals[i]*evects[i][b]   (for all a)
+      // 
+      Scalar eps=1.0e-06;
+      assert(SimilarVec(evals, evals_known, n, eps*max_eval_size, eps));
+      //Check that each eigenvector satisfies Mv = λv
+      // <-->  Σ_b  M[a][b]*evects[i][b] = evals[i]*evects[i][b]   (for all a)
       for (int i = 0; i < n; i++) {
         for (int a = 0; a < n; a++) {
           test_evec[a] = 0.0;
           for (int b = 0; b < n; b++)
             test_evec[a] += M[a][b] * evects[i][b];
-          assert(Similar(test_evec[a], evals[i] * evects[i][a], 1.0e-06));
+          assert(Similar(test_evec[a], evals[i] * evects[i][a], eps, eps));
         }
       }
 
@@ -342,7 +351,8 @@ void TestJacobi(int n, //<! matrix size
 int main(int argc, char **argv) {
   int n_size = 2;
   int n_matr = 1;
-  double erange = 2.0;
+  double emin = 0.1;
+  double emax = 10.0;
   int n_tests = 1;
   int n_degeneracy = 1;
   unsigned seed = 0;
@@ -359,10 +369,8 @@ int main(int argc, char **argv) {
       "                 (Increase this to at least 20 if you plan to use this\n"
       "                 program for benchmarking (speed testing), because the time\n"
       "                 needed for generating a random matrix is not negligible.)\n"
-      "       erange  = the range of eigenvalue magnitudes (log base 10)\n"
-      "#                A value of 2 (default) produces eigenvalues in the range from"
-      "                 1.0 up to 10.0 (This is a 2-orders-of-magnitude difference.)"
-      "                 A value of 1 produces eigenvalues from 1/sqrt(10) to sqrt(10)."
+      "       min_eval = the smallest possible eigenvalue magnitude (>0, eg. 1e-05)\n"
+      "       max_eval = the largest possible eigenvalue magnitude (>0 eg. 1e+05)\n"
       "  n_degeneracy = the number of repeated eigenvalues (disabled by default)\n"
       "          seed = the seed used by the random number generator.\n"
       "                 (By default, the system clock is used.)\n"
@@ -374,15 +382,17 @@ int main(int argc, char **argv) {
   if (argc > 2)
     n_matr = std::stoi(argv[2]);
   if (argc > 3)
-    erange = std::stof(argv[3]);
+    emin = std::stof(argv[3]);
   if (argc > 4)
-    n_tests = std::stoi(argv[4]);
+    emax = std::stof(argv[4]);
   if (argc > 5)
     n_degeneracy = std::stoi(argv[5]);
   if (argc > 6)
-    seed = std::stoi(argv[6]);
+    n_tests = std::stoi(argv[6]);
+  if (argc > 7)
+    seed = std::stoi(argv[7]);
 
-  TestJacobi(n_size, n_matr, erange, n_tests, n_degeneracy, seed);
+  TestJacobi(n_size, n_matr, emin, emax, n_tests, n_degeneracy, seed);
 
   cout << "test passed\n" << endl;
   return EXIT_SUCCESS;
