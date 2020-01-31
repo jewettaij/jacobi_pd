@@ -9,12 +9,14 @@ matrix:
       compiler: gcc
       # Optional: "dist" specifies the operating system ("bionic"=ubuntu18.04)
       dist: bionic
+      before_install:
+        - pip install --user cpp-coveralls
       install:
         - sudo apt-get install valgrind
         #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
-        - g++ -I../include -o test_jacobi test.cpp
+        - g++ -g -O0 --coverage -I../include -o test_jacobi test.cpp
         # Note: With such a huge spread of eigenvalue magnitudes(1e-09..1e+09),
         # some of the smaller eigenvalues (and their corresponding eigenvectors)
         # will be calculated incorrectly due to numeric underflow.
@@ -42,17 +44,21 @@ matrix:
         - g++ -g -O0 -DUSE_C_FIXED_SIZE_ARRAYS -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
+      after_success:
+        - coveralls --exclude lib --exclude tests --gcov-options '\-lp'
 
     - language: cpp
       compiler: clang
       # Optional: "dist" specifies the operating system ("bionic"=ubuntu18.04)
       dist: bionic
+      before_install:
+        - pip install --user cpp-coveralls
       install:
         - sudo apt-get install valgrind
         #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
-        - clang++ -I../include -o test_jacobi test.cpp
+        - clang++ -g -O0 --coverage -I../include -o test_jacobi test.cpp
         #- cppcheck --quiet --error-exitcode=1
         # Note: With such a huge spread of eigenvalue magnitudes(1e-09..1e+09),
         # some of the smaller eigenvalues (and their corresponding eigenvectors)
@@ -79,4 +85,6 @@ matrix:
         - clang++ -g -O0 -DUSE_C_FIXED_SIZE_ARRAYS -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
+      after_success:
+        - coveralls --exclude lib --exclude tests --gcov-options '\-lp'
 
