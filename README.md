@@ -85,7 +85,7 @@ This is a header-only library.
 **jacobi_pd** has been
 [tested](.travis.yml)
 for accuracy and memory safety
-over a wide range of matrix sizes, matrix and vector types,
+over a wide range of array types, matrix sizes,
 eigenvalue magnitudes (and degeneracies).
 
 This code has not yet been profiled or benchmarked.
