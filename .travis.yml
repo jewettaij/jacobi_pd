@@ -38,6 +38,9 @@ matrix:
         #- now test again using array<array<double,5>,5>
         - g++ -g -O0 -DUSE_ARRAY_OF_ARRAY -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
+        #- now test again using double (*)[5]
+        - g++ -g -O0 -DUSE_C_FIXED_SIZE_ARRAYS -I../include -o test_jacobi test.cpp
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
 
     - language: cpp
@@ -71,6 +74,9 @@ matrix:
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         #- now test again using array<array<double,5>,5>
         - clang++ -g -O0 -DUSE_ARRAY_OF_ARRAY -I../include -o test_jacobi test.cpp
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
+        #- now test again using double (*)[5]
+        - clang++ -g -O0 -DUSE_C_FIXED_SIZE_ARRAYS -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
 

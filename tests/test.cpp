@@ -268,7 +268,7 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
   #elif defined USE_ARRAY_OF_ARRAYS
   mmult<array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>
   #elif defined USE_C_FIXED_SIZE_ARRAYS
-  mmult<Scalar *[NF], Scalar *[NF]>
+  mmult<Scalar (*)[NF], Scalar (*)[NF]>
   #else
   mmult<Scalar**, Scalar const *const *>
   #endif
@@ -287,7 +287,7 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
   #elif defined USE_ARRAY_OF_ARRAYS
   mmult<array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>
   #elif defined USE_C_FIXED_SIZE_ARRAYS
-  mmult<Scalar *[NF], Scalar *[NF]>
+  mmult<Scalar (*)[NF], Scalar (*)[NF]>
   #else
   mmult<Scalar**, Scalar const *const *>
   #endif
@@ -368,7 +368,7 @@ void TestJacobi(int n, //<! matrix size
   n = NF;
   cout << "Testing C fixed size arrays.\n"
     "(Ignoring first argument, and setting matrix size to " << n << ")" << endl;
-  Jacobi<Scalar, Scalar*, Scalar *[NF], Scalar *[NF]> ecalc(n);
+  Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]> ecalc(n);
   // allocate the matrix, eigenvalues, eigenvectors
   Scalar M[NF][NF];
   Scalar evects[NF][NF];
@@ -420,7 +420,7 @@ void TestJacobi(int n, //<! matrix size
     #elif defined USE_ARRAY_OF_ARRAYS
     GenRandSymm<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&>
     #elif defined USE_C_FIXED_SIZE_ARRAYS
-    GenRandSymm<Scalar, Scalar*, Scalar *[NF]>
+    GenRandSymm<Scalar, Scalar*, Scalar (*)[NF]>
     #else
     GenRandSymm<Scalar, Scalar*, Scalar**>
     #endif
@@ -442,7 +442,7 @@ void TestJacobi(int n, //<! matrix size
     #elif defined USE_ARRAY_OF_ARRAYS
     SortRows<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&>
     #elif defined USE_C_FIXED_SIZE_ARRAYS
-    SortRows<Scalar, Scalar*, Scalar *[NF]>
+    SortRows<Scalar, Scalar*, Scalar (*)[NF]>
     #else
     SortRows<Scalar, Scalar*, Scalar**>
     #endif
