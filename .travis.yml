@@ -9,8 +9,9 @@ matrix:
       compiler: gcc
       # Optional: "dist" specifies the operating system ("bionic"=ubuntu18.04)
       dist: bionic
-      #install:
-      #  - sudo apt-get install -qq cppcheck
+      install:
+        - sudo apt-get install valgrind
+        #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
         - g++ -std=c++11 -I../include -o test_jacobi test.cpp
@@ -29,16 +30,18 @@ matrix:
         - ./test_jacobi 5 1000 1e-09 1e+09 2
         - ./test_jacobi 20 100 1e-09 1e+09 5
         #- now use valgrind to find memory leaks and other errors:
-        - valgrind --leak-check=full --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
-        - valgrind --leak-check=full --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
+        - g++ -g -O0 -std=c++11 -I../include -o test_jacobi test.cpp
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
         - cd ../
 
     - language: cpp
       compiler: clang
       # Optional: "dist" specifies the operating system ("bionic"=ubuntu18.04)
       dist: bionic
-      #install:
-      #  - sudo apt-get install -qq cppcheck
+      install:
+        - sudo apt-get install valgrind
+        #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
         - clang++ -std=c++11 -I../include -o test_jacobi test.cpp
@@ -56,7 +59,8 @@ matrix:
         - ./test_jacobi 2 1000 1e-09 1e+09 2
         - ./test_jacobi 5 1000 1e-09 1e+09 2
         - ./test_jacobi 20 100 1e-09 1e+09 5
-        - valgrind --leak-check=full --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
-        - valgrind --leak-check=full --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
+        - clang++ -g -O0 -std=c++11 -I../include -o test_jacobi test.cpp
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
         - cd ../
 
