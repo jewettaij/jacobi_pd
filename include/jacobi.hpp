@@ -76,7 +76,7 @@ private:
   ///        both sides) will zero the ij'th element of M, so that afterwards
   ///        M[i][j] = 0.  The results will be stored in c, s, and t
   ///        (which store cos(θ), sin(θ), and tan(θ), respectively).
-  void CalcRot(Matrix M,   //!< matrix
+  void CalcRot(Scalar const *const *M,   //!< matrix
                int i,      //!< row index
                int j);     //!< column index
 
@@ -84,7 +84,7 @@ private:
   ///        by multiplying it on both sides (a "similarity transform").
   ///        (To save time, only update the elements in the upper-right
   ///         triangular region of the matrix.  It is assumed that i < j.)
-  void ApplyRot(Matrix M,  //!< matrix
+  void ApplyRot(Scalar **M,  //!< matrix
                 int i,     //!< row index
                 int j);    //!< column index
 
@@ -95,15 +95,15 @@ private:
                     int j);    //!< column index
 
   ///@brief Find the off-diagonal index in row i whose absolute value is largest
-  int MaxEntryRow(Matrix M, int i) const;
+  int MaxEntryRow(Scalar const *const *M, int i) const;
 
   /// @brief Find the indices (i_max, j_max) marking the location of the
   ///        entry in the matrix with the largest absolute value.  This
   ///        uses the max_idx_row[] array to find the answer in O(n) time.
-  /// @returns This function does not return avalue.  However after it is
+  /// @returns This function does not return a avalue.  However after it is
   ///          invoked, the location of the largest matrix element will be
   ///          stored in the i_max and j_max arguments.
-  void MaxEntry(Matrix M, int& i_max, int& j_max) const;
+  void MaxEntry(Scalar const *const *M, int& i_max, int& j_max) const;
 
   // @brief Sort the rows in M according to the numbers in v (also sorted)
   void SortRows(Vector v, //!< vector containing the keys used for sorting
@@ -151,7 +151,7 @@ Diagonalize(ConstMatrix mat,    // the matrix you wish to diagonalize (size n)
 
   if (calc_evec)
     for (int i = 0; i < n; i++)
-      for (int j = 0; j < n; j++)        //Initialize the evec[][] matrix.
+      for (int j = 0; j < n; j++)
         evec[i][j] = (i==j) ? 1.0 : 0.0; //Set evec equal to the identity matrix
 
   for (int i = 0; i < n-1; i++)          //Initialize the "max_idx_row[]" array 
@@ -202,7 +202,7 @@ Diagonalize(ConstMatrix mat,    // the matrix you wish to diagonalize (size n)
 
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
-CalcRot(Matrix M,    // matrix
+CalcRot(Scalar const *const *M,    // matrix
         int i,       // row index
         int j)       // column index
 {
@@ -292,7 +292,7 @@ CalcRot(Matrix M,    // matrix
 
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
-ApplyRot(Matrix M,  // matrix
+ApplyRot(Scalar **M,  // matrix
          int i,     // row index
          int j)     // column index
 {
@@ -384,7 +384,7 @@ ApplyRotLeft(Matrix E,  // matrix
 
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 int Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
-MaxEntryRow(Matrix M, int i) const {
+MaxEntryRow(Scalar const *const *M, int i) const {
   int j_max = i+1;
   for(int j = i+2; j < n; j++)
     if (std::abs(M[i][j]) > std::abs(M[i][j_max]))
@@ -396,7 +396,7 @@ MaxEntryRow(Matrix M, int i) const {
 
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
-MaxEntry(Matrix M, int& i_max, int& j_max) const {
+MaxEntry(Scalar const *const *M, int& i_max, int& j_max) const {
   // find the maximum entry in the matrix M in O(n) time
   i_max = 0; // (start with an arbitrary
   j_max = 1; //  off-diagonal element: M[0][1])
@@ -531,7 +531,7 @@ Jacobi(Jacobi<Scalar, Vector, Matrix, ConstMatrix>&& other) {
   swap(*this, other);
 }
 
-// Using the "copy-swap" idiom for the assignment operator (=)
+// Using the "copy-swap" idiom for the assignment operator
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 Jacobi<Scalar, Vector, Matrix, ConstMatrix>&
 Jacobi<Scalar, Vector, Matrix, ConstMatrix>::

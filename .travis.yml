@@ -32,7 +32,12 @@ matrix:
         #- now use valgrind to find memory leaks and other errors:
         - g++ -g -O0 -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
-        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
+        #- now test again using vector<vector<double>> instead of double **
+        - g++ -g -O0 -DUSE_VECTOR_OF_VECTORS -I../include -o test_jacobi test.cpp
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
+        #- now test again using array<array<double,5>,5>
+        - g++ -g -O0 -DUSE_ARRAY_OF_ARRAY -I../include -o test_jacobi test.cpp
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
 
     - language: cpp
@@ -61,6 +66,11 @@ matrix:
         - ./test_jacobi 20 100 1e-09 1e+09 5
         - clang++ -g -O0 -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
-        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
+        #- now test again using vector<vector<double>> instead of double **
+        - clang++ -g -O0 -DUSE_VECTOR_OF_VECTORS -I../include -o test_jacobi test.cpp
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
+        #- now test again using array<array<double,5>,5>
+        - clang++ -g -O0 -DUSE_ARRAY_OF_ARRAY -I../include -o test_jacobi test.cpp
+        - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
 

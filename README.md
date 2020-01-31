@@ -16,7 +16,7 @@ This remains one of the oldest and most popular algorithms for
 diagonalizing dense, square, real, symmetric matrices.
 
 The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
-vector\<vector\<X\>\>, array\<array\<X\>\>, fixed-size arrays,
+vector\<vector\<X\>\>&, fixed-size arrays,
 or any other C or C++ object which supports double-indexing.
 (Here **X** is any real numeric type.  Complex numbers are not supported.)
 
@@ -63,10 +63,14 @@ double **evects; // Store the eigenvectors here.
 // multiple times without incurring the cost of allocating memory on the heap.
 Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
 
+// Note: If you prefer using vectors over C-style pointers, this works also:
+// Jacobi<double, vector<double>&, vector<vector<double>>&,
+//        vector<vector<double>>&>  eigen_calc(n);
+
 // Now, calculate the eigenvalues and eigenvectors of M
 eigen_calc.Diagonalize(M, evals, evects);
 ```
-*(A complete working example can be found [here](tests/test.cpp).)*
+*(A working example can be found [here](tests/test.cpp).)*
 
 ## Installation
 

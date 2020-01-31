@@ -5,6 +5,8 @@
 #include <chrono>
 #include <random>
 #include <algorithm>
+#include <vector>
+#include <array>
 #include "matrix_alloc.hpp"
 #include "jacobi.hpp"
 
@@ -12,8 +14,23 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::setprecision;
+using std::vector;
+using std::array;
 using namespace matrix_alloc;
 using namespace jacobi_public_domain;
+
+
+// This code works with various types of C++ matrices (for example,
+// double **, vector<vector<double>> array<array<double,5>,5>).
+// I use "#if defined" statements to test different matrix types.
+// For some of these (eg. array<array<double,5>,5>), the size of the matrix
+// must be known at compile time.  I specify that size now.
+#if defined USE_ARRAY_OF_ARRAYS
+const int NF=5;  //(the array size must be known at compile time)
+#elif defined USE_C_FIXED_SIZE_ARRAYS
+const int NF=5;  //(the array size must be known at compile time)
+#endif
+
 
 // @brief  Are two numbers "similar"?
 template<typename Scalar>
@@ -63,7 +80,6 @@ void mmult(ConstMatrix A, //<! input array
            int K=0     //<! optional: number of columns of A = num rows of B (=m by default)
            )
 {
-  assert((C != A) && (C != B));
   if (n == 0) n = m; // if not specified, then assume the matrices are square
   if (K == 0) K = m; // if not specified, then assume the matrices are square
 
@@ -193,9 +209,20 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
 {
   assert(n_degeneracy <= n);
   std::uniform_real_distribution<Scalar> random_real01;
+  #if defined USE_VECTOR_OF_VECTORS
+  vector<vector<Scalar> > D(n, vector<Scalar>(n));
+  vector<vector<Scalar> > tmp(n, vector<Scalar>(n));
+  #elif defined USE_ARRAY_OF_ARRAYS
+  array<array<Scalar, NF>, NF> D;
+  array<array<Scalar, NF>, NF> tmp;
+  #elif defined USE_C_FIXED_SIZE_ARRAYS
+  Scalar D[NF][NF], tmp[NF][NF];
+  #else
+  #define USE_C_POINTER_TO_POINTERS
   Scalar  **D, **tmp;
   Alloc2D(n, n, &D);
   Alloc2D(n, n, &tmp);
+  #endif
 
   // Randomly generate the eigenvalues
   for (int i = 0; i < n; i++) {
@@ -231,13 +258,46 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
   GenRandOrth<Scalar, Matrix>(evects, n, generator); //(will transpose it later)
 
   // Construct the test matrix, M, where M = Rt * D * R
-  mmult(evects, D, tmp, n);  //tmp = Rt * D
+
+  // Original code:
+  //mmult(evects, D, tmp, n);  // <--> tmp = Rt * D
+  // Unfortunately, C++ guesses the types incorrectly.  Must manually specify:
+  // #ifdefs making the code ugly again:
+  #if defined USE_VECTOR_OF_VECTORS
+  mmult<vector<vector<Scalar> >&, vector<vector<Scalar> >&>
+  #elif defined USE_ARRAY_OF_ARRAYS
+  mmult<array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>
+  #elif defined USE_C_FIXED_SIZE_ARRAYS
+  mmult<Scalar *[NF], Scalar *[NF]>
+  #else
+  mmult<Scalar**, Scalar const *const *>
+  #endif
+       (evects, D, tmp, n);
+
   for (int i = 0; i < n-1; i++)
     for (int j = i+1; j < n; j++)
       std::swap(evects[i][j], evects[j][i]); //transpose "evects"
-  mmult(tmp, evects, M, n);  //at this point M = Rt * D * R (where "R"="evects")
+
+  // Original code:
+  //mmult(tmp, evects, M, n);
+  // Unfortunately, C++ guesses the types incorrectly.  Must manually specify:
+  // #ifdefs making the code ugly again:
+  #if defined USE_VECTOR_OF_VECTORS
+  mmult<vector<vector<Scalar> >&, vector<vector<Scalar> >&>
+  #elif defined USE_ARRAY_OF_ARRAYS
+  mmult<array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>
+  #elif defined USE_C_FIXED_SIZE_ARRAYS
+  mmult<Scalar *[NF], Scalar *[NF]>
+  #else
+  mmult<Scalar**, Scalar const *const *>
+  #endif
+       (tmp, evects, M, n);
+  //at this point M = Rt*D*R (where "R"="evects")
+
+  #if defined USE_C_POINTER_TO_POINTERS
   Dealloc2D(&D);
   Dealloc2D(&tmp);
+  #endif
 } // GenRandSymm()
 
 
@@ -248,6 +308,7 @@ void TestJacobi(int n, //<! matrix size
                 Scalar min_eval_size=0.1,  //<! minimum possible eigenvalue sizw
                 Scalar max_eval_size=10.0, //<! maximum possible eigenvalue size
                 int n_tests_per_matrix=1, //<! repeat test for benchmarking?
+
                 int n_degeneracy=1, //<! repeated eigenvalues?
                 unsigned seed=0 //<! random seed (if 0 then use the clock)
                 )
@@ -262,12 +323,20 @@ void TestJacobi(int n, //<! matrix size
 
 
 
-  // --------- The following code 
+  // Create an instance of the Jacobi diagonalizer, and allocate the matrix
+  // we will test it on, as well as the arrays that will store the resulting
+  // eigenvalues and eigenvectors.
+  // The way we do this dependa on what version of the code we are using.
+  // This is controlled by "#if defined" statements.
   
-  #if defined USE_VECTORS_OF_VECTORS
+  #if defined USE_VECTOR_OF_VECTORS
 
-  Jacobi<Scalar, vector<Scalar>, vector<vector<Scalar> >,
-         const vector<const vector<Scalar> > > ecalc(n);
+  Jacobi<Scalar,
+         vector<Scalar>&,
+         vector<vector<Scalar> >&,
+         vector<vector<Scalar> >& >
+    ecalc(n);
+
   // allocate the matrix, eigenvalues, eigenvectors
   vector<vector<Scalar> > M(n, vector<Scalar>(n));
   vector<vector<Scalar> > evects(n, vector<Scalar>(n));
@@ -276,34 +345,37 @@ void TestJacobi(int n, //<! matrix size
   vector<Scalar> evals_known(n);
   vector<Scalar> test_evec(n);
 
-  #elseif defined USE_ARRAYS_OF_ARRAYS
+  #elif defined USE_ARRAY_OF_ARRAYS
 
-  n = 5;
+  n = NF;
   cout << "Testing std::array (fixed size).\n"
     "(Ignoring first argument, and setting matrix size to " << n << ")" << endl;
-  Jacobi<Scalar, array<Scalar, 5>, array<array<Scalar, 5>, 5>,
-         const array<const array<Scalar, 5>, 5> > ecalc(n);
+  Jacobi<Scalar,
+         array<Scalar, NF>&,
+         array<array<Scalar, NF>, NF>&,
+         array<array<Scalar, NF>, NF>& >
+    ecalc(n);
   // allocate the matrix, eigenvalues, eigenvectors
-  array<array<Scalar, 5>, 5> M;
-  array<array<Scalar, 5>, 5> evects;
-  array<array<Scalar, 5>, 5> evects_known;
-  array<Scalar, 5> evals;
-  array<Scalar, 5> evals_known;
-  array<Scalar, 5> test_evec;
+  array<array<Scalar, NF>, NF> M;
+  array<array<Scalar, NF>, NF> evects;
+  array<array<Scalar, NF>, NF> evects_known;
+  array<Scalar, NF> evals;
+  array<Scalar, NF> evals_known;
+  array<Scalar, NF> test_evec;
 
-  #elseif defined USE_C_FIXED_SIZE_ARRAYS
+  #elif defined USE_C_FIXED_SIZE_ARRAYS
 
-  n = 5;
+  n = NF;
   cout << "Testing C fixed size arrays.\n"
     "(Ignoring first argument, and setting matrix size to " << n << ")" << endl;
-  Jacobi<Scalar, Scalar*, Scalar *[5], Scalar *[5]> ecalc(n);
+  Jacobi<Scalar, Scalar*, Scalar *[NF], Scalar *[NF]> ecalc(n);
   // allocate the matrix, eigenvalues, eigenvectors
-  Scalar[5][5] M;
-  Scalar[5][5] evects;
-  Scalar[5][5] evects_known;
-  Scalar[5] evals;
-  Scalar[5] evals_known;
-  Scalar[5] test_evec;
+  Scalar M[NF][NF];
+  Scalar evects[NF][NF];
+  Scalar evects_known[NF][NF];
+  Scalar evals[NF];
+  Scalar evals_known[NF];
+  Scalar test_evec[NF];
 
   #else
  
@@ -333,7 +405,9 @@ void TestJacobi(int n, //<! matrix size
   #endif
 
 
-  // Now, generate random matrices and test Jacobi::Diagonalize() on them
+  // --------------------------------------------------------------------
+  // Now, generate random matrices and test Jacobi::Diagonalize() on them.
+  // --------------------------------------------------------------------
 
   for(int imat = 0; imat < n_matrices; imat++) {
 
@@ -341,7 +415,16 @@ void TestJacobi(int n, //<! matrix size
     //This function generates random numbers for the eigenvalues ("evals_known")
     //as well as the eigenvectors ("evects_known"), and uses them to generate M.
 
-    GenRandSymm(M,
+    #if defined USE_VECTOR_OF_VECTORS
+    GenRandSymm<Scalar, vector<Scalar>&, vector<vector<Scalar> >&>
+    #elif defined USE_ARRAY_OF_ARRAYS
+    GenRandSymm<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&>
+    #elif defined USE_C_FIXED_SIZE_ARRAYS
+    GenRandSymm<Scalar, Scalar*, Scalar *[NF]>
+    #else
+    GenRandSymm<Scalar, Scalar*, Scalar**>
+    #endif
+               (M,
                 n,
                 evals_known,
                 evects_known,
@@ -350,8 +433,21 @@ void TestJacobi(int n, //<! matrix size
                 max_eval_size,
                 n_degeneracy);
 
-    // Sort the matrix evals and eigenvector rows
-    SortRows<Scalar>(evals_known, evects_known, n);
+    // Sort the matrix evals and eigenvector rows:
+    // Original code:
+    //SortRows<Scalar>(evals_known, evects_known, n);
+    // Unfortunately, C++ guesses the types incorrectly. Must use #ifdefs again:
+    #if defined USE_VECTOR_OF_VECTORS
+    SortRows<Scalar, vector<Scalar>&, vector<vector<Scalar> >&>
+    #elif defined USE_ARRAY_OF_ARRAYS
+    SortRows<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&>
+    #elif defined USE_C_FIXED_SIZE_ARRAYS
+    SortRows<Scalar, Scalar*, Scalar *[NF]>
+    #else
+    SortRows<Scalar, Scalar*, Scalar**>
+    #endif
+            (evals_known, evects_known, n);
+
 
     if (n_matrices == 1) {
       cout << "Eigenvalues (after sorting):\n";
