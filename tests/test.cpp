@@ -254,26 +254,74 @@ void TestJacobi(int n, //<! matrix size
 {
   cout << endl << "-- Diagonalization test (real symmetric)  --" << endl;
 
-  // Note: Normally, you would just use this to instantiate Jacobi:
-  // Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc(n);
-  //
-  // ..but since Jacobi manages its own memory using new and delete, I also want
-  // to test that the copy constructors, copy operators, and destructors work.
-  // The following lines do this.  (Run this using "valgrind".)
-  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc_test_mem1(n);
-  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc_test_mem2(2);
-  // test the = operator
-  ecalc_test_mem2 = ecalc_test_mem1;
-  // test the copy constructor
-  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc(ecalc_test_mem2);
-
-
   // construct a random generator engine using a time-based seed:
 
   if (seed == 0) // if the caller did not specify a seed, use the system clock
     seed = std::chrono::system_clock::now().time_since_epoch().count();
   std::default_random_engine generator(seed);
 
+
+
+  // --------- The following code 
+  
+  #if defined USE_VECTORS_OF_VECTORS
+
+  Jacobi<Scalar, vector<Scalar>, vector<vector<Scalar> >,
+         const vector<const vector<Scalar> > > ecalc(n);
+  // allocate the matrix, eigenvalues, eigenvectors
+  vector<vector<Scalar> > M(n, vector<Scalar>(n));
+  vector<vector<Scalar> > evects(n, vector<Scalar>(n));
+  vector<vector<Scalar> > evects_known(n, vector<Scalar>(n));
+  vector<Scalar> evals(n);
+  vector<Scalar> evals_known(n);
+  vector<Scalar> test_evec(n);
+
+  #elseif defined USE_ARRAYS_OF_ARRAYS
+
+  n = 5;
+  cout << "Testing std::array (fixed size).\n"
+    "(Ignoring first argument, and setting matrix size to " << n << ")" << endl;
+  Jacobi<Scalar, array<Scalar, 5>, array<array<Scalar, 5>, 5>,
+         const array<const array<Scalar, 5>, 5> > ecalc(n);
+  // allocate the matrix, eigenvalues, eigenvectors
+  array<array<Scalar, 5>, 5> M;
+  array<array<Scalar, 5>, 5> evects;
+  array<array<Scalar, 5>, 5> evects_known;
+  array<Scalar, 5> evals;
+  array<Scalar, 5> evals_known;
+  array<Scalar, 5> test_evec;
+
+  #elseif defined USE_C_FIXED_SIZE_ARRAYS
+
+  n = 5;
+  cout << "Testing C fixed size arrays.\n"
+    "(Ignoring first argument, and setting matrix size to " << n << ")" << endl;
+  Jacobi<Scalar, Scalar*, Scalar *[5], Scalar *[5]> ecalc(n);
+  // allocate the matrix, eigenvalues, eigenvectors
+  Scalar[5][5] M;
+  Scalar[5][5] evects;
+  Scalar[5][5] evects_known;
+  Scalar[5] evals;
+  Scalar[5] evals_known;
+  Scalar[5] test_evec;
+
+  #else
+ 
+  #define USE_C_POINTER_TO_POINTERS
+
+  // Note: Normally, you would just use this to instantiate Jacobi:
+  // Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc(n);
+  // -------------------------
+  // ..but since Jacobi manages its own memory using new and delete, I also want
+  // to test that the copy constructors, copy operators, and destructors work.
+  // The following lines do this:
+  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc_test_mem1(n);
+  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc_test_mem2(2);
+  // test the = operator
+  ecalc_test_mem2 = ecalc_test_mem1;
+  // test the copy constructor
+  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc(ecalc_test_mem2);
+  // allocate the matrix, eigenvalues, eigenvectors
   Scalar **M, **evects, **evects_known;
   Alloc2D(n, n, &M);
   Alloc2D(n, n, &evects);
@@ -282,23 +330,28 @@ void TestJacobi(int n, //<! matrix size
   Scalar *evals_known = new Scalar[n];
   Scalar *test_evec = new Scalar[n];
 
+  #endif
+
+
+  // Now, generate random matrices and test Jacobi::Diagonalize() on them
+
   for(int imat = 0; imat < n_matrices; imat++) {
 
     // Create a randomly generated symmetric matrix.
     //This function generates random numbers for the eigenvalues ("evals_known")
     //as well as the eigenvectors ("evects_known"), and uses them to generate M.
 
-    GenRandSymm<Scalar, Scalar*, Scalar**>(M,
-                                           n,
-                                           evals_known,
-                                           evects_known,
-                                           generator,
-                                           min_eval_size,
-                                           max_eval_size,
-                                           n_degeneracy);
+    GenRandSymm(M,
+                n,
+                evals_known,
+                evects_known,
+                generator,
+                min_eval_size,
+                max_eval_size,
+                n_degeneracy);
 
     // Sort the matrix evals and eigenvector rows
-    SortRows<Scalar, Scalar*, Scalar**> (evals_known, evects_known, n);
+    SortRows<Scalar>(evals_known, evects_known, n);
 
     if (n_matrices == 1) {
       cout << "Eigenvalues (after sorting):\n";
@@ -350,12 +403,14 @@ void TestJacobi(int n, //<! matrix size
 
   } //for(int imat = 0; imat < n_matrices; imat++) {
 
+  #if defined USE_C_POINTER_TO_POINTERS
   Dealloc2D(&M);
   Dealloc2D(&evects);
   Dealloc2D(&evects_known);
   delete [] evals;
   delete [] evals_known;
   delete [] test_evec;
+  #endif
 
 } //TestJacobi()
 

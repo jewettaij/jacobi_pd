@@ -76,17 +76,19 @@ to a location in your
 No linking is necessary.
 This is a header-only library.
 
-# Development Status: *beta*
+## Development Status: *stable*
 
-As of 2020-1-30, the eigensolver is now free of memory leaks
-and is working quickly and efficiently over a wide range of
-matrix sizes, eigenvalue magnitudes (and degeneracies).
-More testing is needed for profiling and testing using alternate matrix types
-(ie vector<vector<X>> and array<array<X>>).
+**jacobi_pd** has been
+[tested](.travis.yml)
+for accuracy and memory leaks
+over a wide range of matrix sizes, matrix and vector types,
+eigenvalue magnitudes (and degeneracies).
 
-## Requirements:
+This code has not yet been profiled or benchmarked.
 
-A C++11 compatible environment.
+## Requirements
+
+A C++11 compatible compiler.
 
 ## License
 
