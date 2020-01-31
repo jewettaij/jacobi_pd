@@ -84,9 +84,9 @@ matrix sizes, eigenvalue magnitudes (and degeneracies).
 More testing is needed for profiling and testing using alternate matrix types
 (ie vector<vector<X>> and array<array<X>>).
 
-C++11:  As of 2020-1-30, a move constructor and move assignment operator
-have yet to be written.
+## Requirements:
 
+A C++11 compatible environment.
 
 ## License
 

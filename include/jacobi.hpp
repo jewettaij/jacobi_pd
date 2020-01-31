@@ -119,8 +119,9 @@ private:
   void Dealloc();
 
 public:
-  // memory management: copy constructor, swap, and assignment operator
+  // memory management: copy & move constructors, swap, and assignment operator
   Jacobi(const Jacobi<Scalar, Vector, Matrix, ConstMatrix>& source);
+  Jacobi(Jacobi<Scalar, Vector, Matrix, ConstMatrix>&& other);
   void swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other);
   Jacobi<Scalar, Vector, Matrix, ConstMatrix>& operator = (Jacobi<Scalar, Vector, Matrix, ConstMatrix> source);
 
@@ -520,6 +521,14 @@ swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other) {
   std::swap(n, other.n);
   std::swap(max_idx_row, other.max_idx_row);
   std::swap(M, other.M);
+}
+
+// Move constructor (C++11)
+template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
+Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
+Jacobi(Jacobi<Scalar, Vector, Matrix, ConstMatrix>&& other) {
+  Init();
+  swap(*this, other);
 }
 
 // Using the "copy-swap" idiom for the assignment operator (=)

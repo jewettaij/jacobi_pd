@@ -14,7 +14,7 @@ matrix:
         #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
-        - g++ -std=c++11 -I../include -o test_jacobi test.cpp
+        - g++ -I../include -o test_jacobi test.cpp
         # Note: With such a huge spread of eigenvalue magnitudes(1e-09..1e+09),
         # some of the smaller eigenvalues (and their corresponding eigenvectors)
         # will be calculated incorrectly due to numeric underflow.
@@ -30,7 +30,7 @@ matrix:
         - ./test_jacobi 5 1000 1e-09 1e+09 2
         - ./test_jacobi 20 100 1e-09 1e+09 5
         #- now use valgrind to find memory leaks and other errors:
-        - g++ -g -O0 -std=c++11 -I../include -o test_jacobi test.cpp
+        - g++ -g -O0 -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
         - cd ../
@@ -44,7 +44,7 @@ matrix:
         #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
-        - clang++ -std=c++11 -I../include -o test_jacobi test.cpp
+        - clang++ -I../include -o test_jacobi test.cpp
         #- cppcheck --quiet --error-exitcode=1
         # Note: With such a huge spread of eigenvalue magnitudes(1e-09..1e+09),
         # some of the smaller eigenvalues (and their corresponding eigenvectors)
@@ -59,7 +59,7 @@ matrix:
         - ./test_jacobi 2 1000 1e-09 1e+09 2
         - ./test_jacobi 5 1000 1e-09 1e+09 2
         - ./test_jacobi 20 100 1e-09 1e+09 5
-        - clang++ -g -O0 -std=c++11 -I../include -o test_jacobi test.cpp
+        - clang++ -g -O0 -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09 2
         - cd ../
