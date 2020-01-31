@@ -80,7 +80,7 @@ This is a header-only library.
 
 **jacobi_pd** has been
 [tested](.travis.yml)
-for accuracy and memory leaks
+for accuracy and memory safety
 over a wide range of matrix sizes, matrix and vector types,
 eigenvalue magnitudes (and degeneracies).
 
