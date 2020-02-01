@@ -45,7 +45,7 @@ or adapted from other sources.
 does not run in parallel,
 and it only works on dense square real symmetric matrices.
 However it is short, simple, fast, and reliable.
-You can freely use this code anywhere you like.
+You can do anything you like with this code.
 
 
 ##  Example usage
