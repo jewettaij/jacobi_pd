@@ -11,28 +11,29 @@ matrix:
       dist: bionic
       install:
         - sudo apt-get install valgrind
-        #- pip install --user cpp-coveralls
-        #- sudo apt-get install lcov
-        #- gem install coveralls-lcov
         #- sudo apt-get install -qq cppcheck
       script:
-        #- CODECOV_TOKEN="1e53f9a7-e867-40a5-b302-2520345fb5eb"
         - cd tests
         - g++ -g -O0 -coverage -fno-inline -fno-inline-small-functions -fno-default-inline -I../include -o test_jacobi test.cpp
-        # Note: With such a huge spread of eigenvalue magnitudes(1e-09..1e+09),
-        # some of the smaller eigenvalues (and their corresponding eigenvectors)
-        # will be calculated incorrectly due to numeric underflow.
-        # The test will not fail in these cases since this is to be expected.
-        # Only errors which are within machine precision of the largest
-        # eigenvalues are considered important.
+        - ./test_jacobi 5 1000 1e-03 1e+03 1 0  # ("0" tests for code-coverage)
         #- cppcheck --quiet --error-exitcode=1
-        - ./test_jacobi 2 1000 1e-09 1e+09
-        - ./test_jacobi 5 1000 1e-09 1e+09
-        - ./test_jacobi 20 100 1e-09 1e+09
+        # Now turn off code-coverage testing and try different size matrices.
+        # Note: With such a huge spread of eigenvalue magnitudes(1e-12..1e+12),
+        # some of the smaller eigenvalues (and their corresponding eigenvectors)
+        # will be calculated incorrectly due to numeric underflow.  The test
+        # will not fail in these cases even though eigenvalues do not match.
+        # Only errors which are within machine precision of the largest
+        # eigenvalue are considered important and will cause the test to fail.
+        - g++ -g -I../include -o test_jacobi test.cpp
+        - ./test_jacobi 2 1000 0.1 10
+        - ./test_jacobi 5 1000 0.01 100.0
+        - ./test_jacobi 20 100 1e-05 1e+05
+        - ./test_jacobi 50  2  1e-12 1e+12
         #- now test again with degenerate eigenvalues
-        - ./test_jacobi 2 1000 1e-09 1e+09 2
-        - ./test_jacobi 5 1000 1e-09 1e+09 2
-        - ./test_jacobi 20 100 1e-09 1e+09 5
+        - ./test_jacobi 2 1000 0.1 10 2
+        - ./test_jacobi 5 1000 0.01 100.0 2
+        - ./test_jacobi 20 100 1e-05 1e+05 5
+        - ./test_jacobi 50  2  1e-12 1e+12 10
         #- now use valgrind to find memory leaks and other errors:
         - g++ -g -O0 -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
@@ -49,12 +50,6 @@ matrix:
       after_success:
         - bash <(curl -s https://codecov.io/bash)
         # alternate method:
-        #- coveralls --gcov --gcov-options '\-lp' --exclude tests
-        ## alternate method:
-        ##- lcov --directory . --capture --output-file coverage.info
-        ##- lcov --remove coverage.info '/usr/*'  --output-file coverage.info
-        ##- lcov --list coverage.info
-        ##- coveralls-lcov coverage.info
 
 
 
@@ -64,28 +59,29 @@ matrix:
       dist: bionic
       install:
         - sudo apt-get install valgrind
-        #- pip install --user cpp-coveralls
-        #- sudo apt-get install lcov
-        #- gem install coveralls-lcov
         #- sudo apt-get install -qq cppcheck
       script:
-        #- CODECOV_TOKEN="1e53f9a7-e867-40a5-b302-2520345fb5eb"
         - cd tests
         - clang++ -g -O0 -coverage -fno-inline -I../include -o test_jacobi test.cpp
+        - ./test_jacobi 5 1000 1e-03 1e+03 1 0  # ("0" tests for code-coverage)
         #- cppcheck --quiet --error-exitcode=1
-        # Note: With such a huge spread of eigenvalue magnitudes(1e-09..1e+09),
+        # Now turn off code-coverage testing and try different size matrices.
+        # Note: With such a huge spread of eigenvalue magnitudes(1e-12..1e+12),
         # some of the smaller eigenvalues (and their corresponding eigenvectors)
-        # will be calculated incorrectly due to numeric underflow.
-        # The test will not fail in these cases since this is to be expected.
+        # will be calculated incorrectly due to numeric underflow.  The test
+        # will not fail in these cases even though eigenvalues do not match.
         # Only errors which are within machine precision of the largest
-        # eigenvalues are considered important.
-        - ./test_jacobi 2 1000 1e-09 1e+09
-        - ./test_jacobi 5 1000 1e-09 1e+09
-        - ./test_jacobi 20 100 1e-09 1e+09
+        # eigenvalue are considered important and will cause the test to fail.
+        - clang++ -g -I../include -o test_jacobi test.cpp
+        - ./test_jacobi 2 1000 0.1 10
+        - ./test_jacobi 5 1000 0.01 100.0
+        - ./test_jacobi 20 100 1e-05 1e+05
+        - ./test_jacobi 50  2  1e-12 1e+12
         #- now test again with degenerate eigenvalues
-        - ./test_jacobi 2 1000 1e-09 1e+09 2
-        - ./test_jacobi 5 1000 1e-09 1e+09 2
-        - ./test_jacobi 20 100 1e-09 1e+09 5
+        - ./test_jacobi 2 1000 0.1 10 2
+        - ./test_jacobi 5 1000 0.01 100.0 2
+        - ./test_jacobi 20 100 1e-05 1e+05 5
+        - ./test_jacobi 50  2  1e-12 1e+10 12
         - clang++ -g -O0 -I../include -o test_jacobi test.cpp
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         #- now test again using vector<vector<double>> instead of double **
@@ -100,12 +96,4 @@ matrix:
         - cd ../
       after_success:
         - bash <(curl -s https://codecov.io/bash)
-        # alternate method:
-        #- coveralls --gcov --gcov-options '\-lp' --exclude tests
-        #- coveralls --gcov --gcov-options '\-lp' --exclude tests
-        ## alternate method:
-        ##- lcov --directory . --capture --output-file coverage.info
-        ##- lcov --remove coverage.info '/usr/*'  --output-file coverage.info
-        ##- lcov --list coverage.info
-        ##- coveralls-lcov coverage.info
 

@@ -74,7 +74,6 @@ Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
 // Now, calculate the eigenvalues and eigenvectors of M
 eigen_calc.Diagonalize(M, evals, evects);
 ```
-*(A working example can be found [here](tests/test.cpp).)*
 
 ## Installation
 

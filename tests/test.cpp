@@ -1,3 +1,6 @@
+// THIS FILE USED TO BE EASY TO READ until I added "#if defined" statements.
+// (They were added to test for many different kinds of array formats.)
+
 #include <iostream>
 #include <cmath>
 #include <iomanip>
@@ -313,6 +316,12 @@ void TestJacobi(int n, //<! matrix size
                 unsigned seed=0 //<! random seed (if 0 then use the clock)
                 )
 {
+  bool test_code_coverage = false;
+  if (n_tests_per_matrix < 1) {
+    cout << "-- Testing code-coverage --" << endl;
+    test_code_coverage = true;
+    n_tests_per_matrix = 1;
+  }
   cout << endl << "-- Diagonalization test (real symmetric)  --" << endl;
 
   // construct a random generator engine using a time-based seed:
@@ -465,6 +474,52 @@ void TestJacobi(int n, //<! matrix size
 
     for (int i_test = 0; i_test < n_tests_per_matrix; i_test++) {
 
+      if (test_code_coverage) {
+
+        // test SORT_INCREASING_ABS_EVALS:
+        #if defined USE_VECTOR_OF_VECTORS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_INCREASING_ABS_EVALS);
+        #elif defined USE_ARRAY_OF_ARRAYS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_INCREASING_ABS_EVALS);
+        #elif defined USE_C_FIXED_SIZE_ARRAYS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_INCREASING_ABS_EVALS);
+        #else
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_INCREASING_ABS_EVALS);
+        #endif
+
+        for (int i = 1; i < n; i++)
+          assert(std::abs(evals[i-1])<=std::abs(evals[i]));
+
+        // test SORT_DECREASING_ABS_EVALS:
+        #if defined USE_VECTOR_OF_VECTORS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_DECREASING_ABS_EVALS);
+        #elif defined USE_ARRAY_OF_ARRAYS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_DECREASING_ABS_EVALS);
+        #elif defined USE_C_FIXED_SIZE_ARRAYS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_DECREASING_ABS_EVALS);
+        #else
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_DECREASING_ABS_EVALS);
+        #endif
+
+        for (int i = 1; i < n; i++)
+          assert(std::abs(evals[i-1])>=std::abs(evals[i]));
+
+        // test SORT_INCREASING_EVALS:
+        #if defined USE_VECTOR_OF_VECTORS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_INCREASING_EVALS);
+        #elif defined USE_ARRAY_OF_ARRAYS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_INCREASING_EVALS);
+        #elif defined USE_C_FIXED_SIZE_ARRAYS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_INCREASING_EVALS);
+        #else
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_INCREASING_EVALS);
+        #endif
+        for (int i = 1; i < n; i++)
+          assert(evals[i-1] <= evals[i]);
+
+      } //if (test_code_coverage)
+
+
       // Now (finally) calculate the eigenvalues and eigenvectors
       int n_sweeps = ecalc.Diagonalize(M, evals, evects);
 
@@ -481,7 +536,7 @@ void TestJacobi(int n, //<! matrix size
           cout << "\n";
         }
       }
-      // 
+
       Scalar eps=1.0e-06;
       assert(SimilarVec(evals, evals_known, n, eps*max_eval_size, eps));
       //Check that each eigenvector satisfies Mv = λv
@@ -523,18 +578,19 @@ int main(int argc, char **argv) {
   if (argc <= 1) {
     cerr <<
       "Error: This program requires at least 1 argument.\n"
-      "Usage: n_size [n_matr n_tests erange n_degeneracy seed]\n"
+      "Usage: n_size [n_matr emin emax n_degeneracy n_tests seed]\n"
       "       n_size  = the size of the matrices\n"
       "           (The remaining arguments are optional.)\n"
       "       n_matr  = the number of randomly generated matrices to test\n"
+      "          emin = the smallest possible eigenvalue magnitude (>0, eg. 1e-05)\n"
+      "          emax = the largest possible eigenvalue magnitude (>0 eg. 1e+05)\n"
+      "  n_degeneracy = the number of repeated eigenvalues (1 disables, default)\n"
       "       n_tests = the number of times the eigenvalues and eigenvectors\n"
-      "                 are calculated for each matrix.  By default this is 1\n"
+      "                 are calculated for EACH matrix.  By default this is 1\n"
       "                 (Increase this to at least 20 if you plan to use this\n"
       "                 program for benchmarking (speed testing), because the time\n"
       "                 needed for generating a random matrix is not negligible.)\n"
-      "       min_eval = the smallest possible eigenvalue magnitude (>0, eg. 1e-05)\n"
-      "       max_eval = the largest possible eigenvalue magnitude (>0 eg. 1e+05)\n"
-      "  n_degeneracy = the number of repeated eigenvalues (disabled by default)\n"
+      "              NOTE: IF THIS NUMBER IS 0, it will test CODE-COVERAGE instead.\n"
       "          seed = the seed used by the random number generator.\n"
       "                 (By default, the system clock is used.)\n"
          << endl;

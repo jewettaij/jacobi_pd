@@ -411,8 +411,8 @@ MaxEntry(Scalar const *const *M, int& i_max, int& j_max) const {
     }
   }
   //#ifndef NDEBUG
-  //// -- remove the next 4 lines before publishing --
   //// make sure that the maximum element really is stored at i_max, j_max
+  ////   (comment out the next loop before using. it slows down the code)
   //for (int i = 0; i < nm1; i++)
   //  for (int j = i+1; j < n; j++)
   //    assert(std::abs(M[i][j]) <= max_entry);
