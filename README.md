@@ -1,7 +1,8 @@
 [![Build Status](https://travis-ci.org/jewettaij/jacobi_pd.svg?branch=master)](https://travis-ci.org/jewettaij/jacobi_pd.svg?branch=master)
-[![GitHub](https://img.shields.io/github/license/jewettaij/jacobi_pd)](./LICENSE.md)
+[![codecov](https://codecov.io/gh/jewettaij/jacobi_pd/branch/master/graph/badge.svg)](https://codecov.io/gh/jewettaij/jacobi_pd)
 [![C++11](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://isocpp.org/std/the-standard)
 [![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/jewettaij/jacobi_pd)]()
+[![License: CC0-1.0](https://licensebuttons.net/l/zero/1.0/88x31.png)](https://creativecommons.org/publicdomain/zero/1.0/)
 
 
 jacobi_pd
