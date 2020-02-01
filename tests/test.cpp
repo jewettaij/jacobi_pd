@@ -569,8 +569,8 @@ void TestJacobi(int n, //<! matrix size
 int main(int argc, char **argv) {
   int n_size = 2;
   int n_matr = 1;
-  double emin = 0.1;
-  double emax = 10.0;
+  double emin = 0.01;
+  double emax = 100.0;
   int n_tests = 1;
   int n_degeneracy = 1;
   unsigned seed = 0;
