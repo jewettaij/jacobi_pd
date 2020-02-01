@@ -5,6 +5,7 @@ test_jacobi
 # coveralls files
 *.gcno *.gcda
 .coverage
+coverage.info
 
 # python environments
 venv

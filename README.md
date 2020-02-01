@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/jewettaij/jacobi_pd.svg?branch=master)](https://travis-ci.org/jewettaij/jacobi_pd.svg?branch=master)
 [![GitHub](https://img.shields.io/github/license/jewettaij/jacobi_pd)](./LICENSE.md)
+[![C++11](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://isocpp.org/std/the-standard)
 [![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/jewettaij/jacobi_pd)]()
 
 
@@ -28,7 +29,7 @@ or any other C or C++ object which supports double-indexing.
 I have had a hard time finding a short, simple eigenvector calculator
 in C++ with an explicitly-stated permissive open-source license.
 Amazingly, in early 2020, no simple *public-domain*
-C++ code yet exists for matrix diagonalization.
+C++11 code yet exists for matrix diagonalization.
 Other C++ libraries such as Eigen or GSL use somewhat more restrictive licenses.
 *(On several occasions, those licenses have prevented me from borrowing code
 from these libraries to contribute to other open-source projects.)*  Some
@@ -42,7 +43,9 @@ or adapted from other sources.
 *Caveats:* The code in this repository has not been optimized,
 does not run in parallel,
 and it only works on dense square real symmetric matrices.
-However you can freely use this code anywhere you like.
+However it is simple, fast, and reliable.
+You can freely use this code anywhere you like.
+
 
 ##  Example usage
 

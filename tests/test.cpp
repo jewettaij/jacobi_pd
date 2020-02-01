@@ -326,7 +326,7 @@ void TestJacobi(int n, //<! matrix size
   // Create an instance of the Jacobi diagonalizer, and allocate the matrix
   // we will test it on, as well as the arrays that will store the resulting
   // eigenvalues and eigenvectors.
-  // The way we do this dependa on what version of the code we are using.
+  // The way we do this depends on what version of the code we are using.
   // This is controlled by "#if defined" statements.
   
   #if defined USE_VECTOR_OF_VECTORS

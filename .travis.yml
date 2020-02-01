@@ -9,10 +9,11 @@ matrix:
       compiler: gcc
       # Optional: "dist" specifies the operating system ("bionic"=ubuntu18.04)
       dist: bionic
-      before_install:
-        - pip install --user cpp-coveralls
       install:
         - sudo apt-get install valgrind
+        - pip install --user cpp-coveralls
+        #- sudo apt-get install lcov
+        #- gem install coveralls-lcov
         #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
@@ -45,16 +46,21 @@ matrix:
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
       after_success:
-        - coveralls --root . --exclude tests
+        - coveralls --gcov --gcov-options '\-lp' --exclude tests
+        #- lcov --directory . --capture --output-file coverage.info
+        #- lcov --remove coverage.info '/usr/*'  --output-file coverage.info
+        #- lcov --list coverage.info
+        #- coveralls-lcov coverage.info
 
     - language: cpp
       compiler: clang
       # Optional: "dist" specifies the operating system ("bionic"=ubuntu18.04)
       dist: bionic
-      before_install:
-        - pip install --user cpp-coveralls
       install:
         - sudo apt-get install valgrind
+        - pip install --user cpp-coveralls
+        #- sudo apt-get install lcov
+        #- gem install coveralls-lcov
         #- sudo apt-get install -qq cppcheck
       script:
         - cd tests
@@ -86,5 +92,10 @@ matrix:
         - valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-09 1e+09
         - cd ../
       after_success:
-        - coveralls --root . --exclude tests
+        - coveralls --gcov --gcov-options '\-lp' --exclude tests
+        # alternate method:
+        #- lcov --directory . --capture --output-file coverage.info
+        #- lcov --remove coverage.info '/usr/*'  --output-file coverage.info
+        #- lcov --list coverage.info
+        #- coveralls-lcov coverage.info
 
