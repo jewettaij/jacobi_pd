@@ -186,9 +186,8 @@ Diagonalize(ConstMatrix mat,    // the matrix you wish to diagonalize (size n)
   for (int i = 0; i < n; i++)
     eval[i] = M[i][i];
 
-  // Sort eigenvalues and eigenvectors?
-  if (sort_criteria != DO_NOT_SORT)
-    SortRows(eval, evec, n, sort_criteria);
+  // Optional: Sort results by eigenvalue.
+  SortRows(eval, evec, n, sort_criteria);
 
   return n_iters / (n*(n-1)/2); //returns the number of "sweeps" (converged?)
 }
@@ -449,7 +448,6 @@ SortRows(Vector eval, Matrix evec, int n, SortCriteria sort_criteria) const
           i_max = j;
         break;
       default:
-        assert(false);
         break;
       }
     }

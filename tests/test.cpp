@@ -517,6 +517,17 @@ void TestJacobi(int n, //<! matrix size
         for (int i = 1; i < n; i++)
           assert(evals[i-1] <= evals[i]);
 
+        // test DO_NOT_SORT
+        #if defined USE_VECTOR_OF_VECTORS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::DO_NOT_SORT);
+        #elif defined USE_ARRAY_OF_ARRAYS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::DO_NOT_SORT);
+        #elif defined USE_C_FIXED_SIZE_ARRAYS
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::DO_NOT_SORT);
+        #else
+        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::DO_NOT_SORT);
+        #endif
+
       } //if (test_code_coverage)
 
 

@@ -41,10 +41,10 @@ or adapted from other sources.
 
 
 
-*Caveats:* The code in this repository has not been optimized,
+*Caveats:* The code in this repository has not been fully optimized,
 does not run in parallel,
 and it only works on dense square real symmetric matrices.
-However it is simple, fast, and reliable.
+However it is short, simple, fast, and reliable.
 You can freely use this code anywhere you like.
 
 
