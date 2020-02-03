@@ -146,7 +146,7 @@ void GenRandOrth(Matrix R,
                  int n,
                  std::default_random_engine &generator)
 {
-  std::normal_distribution<double> gaussian_distribution(0,1);
+  std::normal_distribution<Scalar> gaussian_distribution(0,1);
   std::vector<Scalar> v(n);
 
   for (int i = 0; i < n; i++) {
@@ -212,6 +212,10 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
 {
   assert(n_degeneracy <= n);
   std::uniform_real_distribution<Scalar> random_real01;
+  std::normal_distribution<Scalar> gaussian_distribution(0, max_eval_size);
+  bool use_log_uniform_distribution = false;
+  if (min_eval_size > 0.0)
+    use_log_uniform_distribution = true;
   #if defined USE_VECTOR_OF_VECTORS
   vector<vector<Scalar> > D(n, vector<Scalar>(n));
   vector<vector<Scalar> > tmp(n, vector<Scalar>(n));
@@ -229,16 +233,21 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
 
   // Randomly generate the eigenvalues
   for (int i = 0; i < n; i++) {
-    // Use a "log-uniform distribution" (a.k.a. "reciprocal distribution")
-    // (This is a way to specify numbers with a precise range of magnitudes.)
-    assert((min_eval_size > 0.0) && (max_eval_size > 0.0));
-    Scalar log_min = std::log(std::abs(min_eval_size));
-    Scalar log_max = std::log(std::abs(max_eval_size));
-    Scalar log_eval = (log_min + random_real01(generator)*(log_max-log_min));
-    evals[i] = std::exp(log_eval);
-    // also consider both positive and negative eigenvalues:
-    if (random_real01(generator) < 0.5)
-      evals[i] = -evals[i];
+    if (use_log_uniform_distribution) {
+      // Use a "log-uniform distribution" (a.k.a. "reciprocal distribution")
+      // (This is a way to specify numbers with a precise range of magnitudes.)
+      assert((min_eval_size > 0.0) && (max_eval_size > 0.0));
+      Scalar log_min = std::log(std::abs(min_eval_size));
+      Scalar log_max = std::log(std::abs(max_eval_size));
+      Scalar log_eval = (log_min + random_real01(generator)*(log_max-log_min));
+      evals[i] = std::exp(log_eval);
+      // also consider both positive and negative eigenvalues:
+      if (random_real01(generator) < 0.5)
+        evals[i] = -evals[i];
+    }
+    else {
+      evals[i] = gaussian_distribution(generator);
+    }
   }
 
   // Does the user want us to force some of the eigenvalues to be the same?
@@ -580,8 +589,8 @@ void TestJacobi(int n, //<! matrix size
 int main(int argc, char **argv) {
   int n_size = 2;
   int n_matr = 1;
-  double emin = 0.01;
-  double emax = 100.0;
+  double emin = 0.0;
+  double emax = 1.0;
   int n_tests = 1;
   int n_degeneracy = 1;
   unsigned seed = 0;
@@ -589,19 +598,24 @@ int main(int argc, char **argv) {
   if (argc <= 1) {
     cerr <<
       "Error: This program requires at least 1 argument.\n"
-      "Usage: n_size [n_matr emin emax n_degeneracy n_tests seed]\n"
+      "\n"
+      "Description: Run Jacobi::Diagonalize() on randomly generated matrices.\n"
+      "\n"
+      "Arguments: n_size [n_matr emin emax n_degeneracy n_tests seed]\n"
       "       n_size  = the size of the matrices\n"
-      "           (The remaining arguments are optional.)\n"
+      "    (NOTE: The remaining arguments are optional.)\n"
       "       n_matr  = the number of randomly generated matrices to test\n"
-      "          emin = the smallest possible eigenvalue magnitude (>0, eg. 1e-05)\n"
+      "          emin = the smallest possible eigenvalue magnitude (eg. 1e-05)\n"
       "          emax = the largest possible eigenvalue magnitude (>0 eg. 1e+05)\n"
+      "    (NOTE: If emin=0, a normal distribution is used centered at 0.\n"
+      "           Otherwise a log-uniform distribution is used from emin to emax.)\n"
       "  n_degeneracy = the number of repeated eigenvalues (1 disables, default)\n"
       "       n_tests = the number of times the eigenvalues and eigenvectors\n"
       "                 are calculated for EACH matrix.  By default this is 1\n"
       "                 (Increase this to at least 20 if you plan to use this\n"
       "                 program for benchmarking (speed testing), because the time\n"
       "                 needed for generating a random matrix is not negligible.)\n"
-      "              NOTE: IF THIS NUMBER IS 0, it will test CODE-COVERAGE instead.\n"
+      "    (NOTE: IF THIS NUMBER IS 0, it will test CODE-COVERAGE instead.)\n"
       "          seed = the seed used by the random number generator.\n"
       "                 (By default, the system clock is used.)\n"
          << endl;

@@ -29,12 +29,12 @@ or any other C or C++ object which supports double-indexing.
 
 I have had a hard time finding a short, simple eigenvector calculator
 in C++ with an explicitly-stated permissive open-source license.
-Amazingly, in early 2020, no simple *public-domain*
-C++11 code yet exists for matrix diagonalization.
-Other C++ libraries such as Eigen or GSL use somewhat more restrictive licenses.
-*(On several occasions, those licenses have prevented me from borrowing code
-from these libraries to contribute to other open-source projects.)*  Some
-repositories may unwittingly contain code snippets from other sources, such as
+Amazingly, in early 2020, no simple *public-domain* C++11 code yet exists for
+matrix diagonalization.  Other C++ libraries such as Eigen or GSL use somewhat
+more restrictive licenses.  *(On several occasions, this has prevented me from
+borrowing code from these libraries to contribute to other open-source projects
+with incompatible licenses.)*  Some repositories may unwittingly contain code
+snippets from other sources, such as
 [numerical recipes](http://mingus.as.arizona.edu/~bjw/software/boycottnr.html).
 This repository was written from scratch.  No lines of code were borrowed
 or adapted from other sources.
@@ -44,7 +44,7 @@ or adapted from other sources.
 *Caveats:* The code in this repository has not been fully optimized,
 does not run in parallel,
 and it only works on dense square real symmetric matrices.
-However it is short, simple, fast, and reliable.
+However it is short, simple, and reliable.
 You can do anything you like with this code.
 
 
@@ -75,6 +75,13 @@ Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
 eigen_calc.Diagonalize(M, evals, evects);
 ```
 
+## Benchmarks
+
+[![benchmarks](benchmarks/benchmarks.png)](benchmarks/README.md)
+
+[*(data)*](benchmarks/README.md).
+
+
 ## Installation
 
 Copy the file(s) in the [include](include) subdirectory,
@@ -83,19 +90,20 @@ to a location in your
 No linking is necessary.
 This is a header-only library.
 
+
 ## Development Status: *stable*
 
 **jacobi_pd** has been
 [tested](.travis.yml)
 for accuracy and memory safety
 over a wide range of array types, matrix sizes,
-eigenvalue magnitudes (and degeneracies).
+eigenvalue magnitudes and degeneracies.
 
-This code has not yet been profiled or benchmarked.
 
 ## Requirements
 
 A C++11 compatible compiler.
+
 
 ## License
 
