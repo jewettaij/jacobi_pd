@@ -12,7 +12,7 @@ jacobi_pd
 
 This repository contains
 [public domain](https://creativecommons.org/publicdomain/zero/1.0/)
-header-only template C++ source code for the
+a small header-only template C++ source code for the
 [Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
 This remains one of the oldest and most popular algorithms for
 diagonalizing dense, square, real, symmetric matrices.
@@ -44,7 +44,9 @@ or adapted from other sources.
 *Caveats:* The code in this repository has not been fully optimized,
 does not run in parallel,
 and it only works on dense square real symmetric matrices.
-However it is short, simple, and reliable.
+However it is reasonably short, simple, 
+[fast](benchmarks/README.md) and
+[reliable](.travis.yml).
 You can do anything you like with this code.
 
 
@@ -79,7 +81,7 @@ eigen_calc.Diagonalize(M, evals, evects);
 
 [![benchmarks](benchmarks/benchmarks.png)](benchmarks/README.md)
 
-[*(data)*](benchmarks/README.md).
+[***(details here...)***](benchmarks/README.md).
 
 
 ## Installation

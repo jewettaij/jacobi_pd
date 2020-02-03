@@ -41,11 +41,12 @@ These times were measured on a single i5-4210U CPU core running at 1.70GHz.
    done
 ```
 
-To make the test fair, the "test_jacobi.cpp" file was modified slightly
-to disable the sorting of eigenvalues feature.
-(This is because the *Numerical Recipes* version was not sorting the
- eigenvalues. Either way, this probably did not make a significant
- difference in the running times.)
+*To make the test fair, the "test_jacobi.cpp" file was modified
+slightly to disable the sorting of eigenvalues.
+(I did this by invoking Diagonalize() with sort_criteria=DO_NOT_SORT.
+I did this because the "Numerical Recipes" version of jacobi() was not sorting
+the eigenvalues.  Either way, this probably did not make a significant
+difference in the running times.)*
 
-*If I have time, I will compare this with other popular matrix
-diagonalizers like Eigen and GSL.*
+If I have time, I will compare this with other popular matrix
+diagonalizers like Eigen and GSL.
