@@ -27,9 +27,7 @@ or any other C or C++ object which supports double-indexing.
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
-I have had a hard time finding a short, simple eigenvector calculator
-in C++ with an explicitly-stated permissive open-source license.
-Amazingly, in early 2020, no simple *public-domain* C++11 code yet exists for
+In early 2020, no simple *public-domain* C++11 code yet exists for
 matrix diagonalization.  Other C++ libraries such as Eigen or GSL use somewhat
 more restrictive licenses.  *(On several occasions, this has prevented me from
 borrowing code from these libraries to contribute to other open-source projects
