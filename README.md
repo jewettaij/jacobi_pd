@@ -10,13 +10,11 @@ jacobi_pd
 
 ## Description
 
-This repository contains a small
-header-only template C++ source code for the
-[Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm)
-which is
-[free of copyright](https://creativecommons.org/publicdomain/zero/1.0/).
+This repository contains a small C++ header file that implements the
+[Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
+It is [free of copyright](https://creativecommons.org/publicdomain/zero/1.0/).
 
-This remains one of the oldest and most popular algorithms for
+The Jacobi algorithm remains one of the oldest and most popular methods for
 diagonalizing dense, square, real, symmetric matrices.
 
 The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
