@@ -43,9 +43,8 @@ or adapted from other sources.
 
 
 
-*Caveats:* The code in this repository has not been fully optimized,
-does not run in parallel,
-and it only works on dense square real symmetric matrices.
+*Caveats:* The code in this repository does not run in parallel,
+and only works on dense square real symmetric matrices.
 However it is reasonably
 [short, simple](include/jacobi.hpp), 
 [fast](benchmarks/README.md) and
