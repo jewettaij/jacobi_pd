@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/jewettaij/jacobi_pd/branch/master/graph/badge.svg)](https://codecov.io/gh/jewettaij/jacobi_pd)
 [![C++11](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://isocpp.org/std/the-standard)
 [![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/jewettaij/jacobi_pd)]()
-[![License: CC0-1.0](https://licensebuttons.net/l/zero/1.0/88x31.png)](https://creativecommons.org/publicdomain/zero/1.0/)
+[![License: CC0-1.0](https://licensebuttons.net/p/mark/1.0/88x31.png)](https://creativecommons.org/publicdomain/zero/1.0/)
 
 
 jacobi_pd
@@ -10,10 +10,12 @@ jacobi_pd
 
 ## Description
 
-This repository contains
-[public domain](https://creativecommons.org/publicdomain/zero/1.0/)
-a small header-only template C++ source code for the
-[Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
+This repository contains a small
+header-only template C++ source code for the
+[Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm)
+which is
+[free of copyright](https://creativecommons.org/publicdomain/zero/1.0/).
+
 This remains one of the oldest and most popular algorithms for
 diagonalizing dense, square, real, symmetric matrices.
 
@@ -27,11 +29,13 @@ or any other C or C++ object which supports double-indexing.
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
-In early 2020, no simple *public-domain* C++11 code yet exists for
-matrix diagonalization.  Other C++ libraries such as Eigen or GSL use somewhat
-more restrictive licenses.  *(On several occasions, this has prevented me from
-borrowing code from these libraries to contribute to other open-source projects
-with incompatible licenses.)*  Some repositories may unwittingly contain code
+In early 2020, no simple *public domain* C++11 code
+yet exists for matrix diagonalization.
+Other C++ libraries such as Eigen or GSL use somewhat more restrictive licenses.
+*(On several occasions, this has prevented me from borrowing
+code from these libraries to contribute to other open-source
+projects with incompatible licenses.)*
+Some repositories may unwittingly contain code
 snippets from other sources, such as
 [numerical recipes](http://mingus.as.arizona.edu/~bjw/software/boycottnr.html).
 This repository was written from scratch.  No lines of code were borrowed
