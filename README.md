@@ -44,7 +44,8 @@ or adapted from other sources.
 *Caveats:* The code in this repository has not been fully optimized,
 does not run in parallel,
 and it only works on dense square real symmetric matrices.
-However it is reasonably short, simple, 
+However it is reasonably
+[short, simple](include/jacobi.hpp), 
 [fast](benchmarks/README.md) and
 [reliable](.travis.yml).
 You can do anything you like with this code.
@@ -81,7 +82,7 @@ eigen_calc.Diagonalize(M, evals, evects);
 
 [![benchmarks](benchmarks/benchmarks.png)](benchmarks/README.md)
 
-[***(details here...)***](benchmarks/README.md).
+[***(details here...)***](benchmarks/README.md)
 
 
 ## Installation
