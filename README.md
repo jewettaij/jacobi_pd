@@ -10,7 +10,9 @@ jacobi_pd
 
 ## Description
 
-This repository contains a small C++ header file that implements the
+This repository contains a small C++
+[header file](include/jacobi.hpp)
+that implements the
 [Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
 It is [free of copyright](https://creativecommons.org/publicdomain/zero/1.0/).
 
@@ -58,8 +60,8 @@ using namespace jacobi_public_domain;
 
 // ...
 
-int n = 5;
-double **M;      // A symmetric 5x5 matrix you want to diagonalize
+int n = 5;       // Matrix size
+double **M;      // A symmetric n x n matrix you want to diagonalize
 double *evals;   // Store the eigenvalues here.
 double **evects; // Store the eigenvectors here.
 // Allocate space for M, evals, and evects, and load contents of M (omitted)...
