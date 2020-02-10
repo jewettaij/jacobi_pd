@@ -405,7 +405,8 @@ void TestJacobi(int n, //<! matrix size
   // ..but since Jacobi manages its own memory using new and delete, I also want
   // to test that the copy constructors, copy operators, and destructors work.
   // The following lines do this:
-  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc_test_mem1(n);
+  Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc_test_mem1;
+  ecalc_test_mem1.SetSize(n);
   Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc_test_mem2(2);
   // test the = operator
   ecalc_test_mem2 = ecalc_test_mem1;

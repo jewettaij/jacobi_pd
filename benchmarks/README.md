@@ -1,7 +1,7 @@
 ## Benchmarks
 
-Average time (in seconds) to diagonalize randomly generated
-(normal-distributed) matrices (of floats) as a function of matrix size:
+Average time (in seconds) to diagonalize randomly generated (nxn)
+(normal-distributed) matrices (of floats) as a function of matrix size (n):
 
 ![benchmarks](benchmarks.png)
 

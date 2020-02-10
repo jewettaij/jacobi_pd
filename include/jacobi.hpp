@@ -1,6 +1,9 @@
-///   @file  jacobi.hpp
-///   @brief Calculate the eigenvalues and eigevectors of a symmetric matrix
-///          using the Jacobi eigenvalue algorithm.
+/// @file     jacobi.hpp
+/// @brief    Calculate the eigenvalues and eigevectors of a symmetric matrix
+///           using the Jacobi eigenvalue algorithm.
+/// @author   Andrew Jewett
+/// @license  CC0-1.0
+
 #ifndef _JACOBI_HPP
 #define _JACOBI_HPP
 
@@ -37,7 +40,9 @@ public:
 
   /// @brief  Specify the size of the matrices you want to diagonalize later.
   /// @param n  the size (ie. number of rows) of the square matrix
-  Jacobi(int n) {
+  void SetSize(int n);
+
+  Jacobi(int n = 0) {
     Init();
     SetSize(n);
   }
@@ -113,7 +118,6 @@ private:
                 ) const;
 
   // memory management:
-  void SetSize(int n);
   void Alloc(int n);
   void Init();
   void Dealloc();
@@ -164,15 +168,14 @@ Diagonalize(ConstMatrix mat,    // the matrix you wish to diagonalize (size n)
     int i,j;
     MaxEntry(M, i, j); // Find the maximum entry in the matrix. Store in i,j
 
-    if (M[i][j] == 0.0)
-      break;
-
     // If M[i][j] is small compared to M[i][i] and M[j][j], set it to 0.
     if ((M[i][i] + M[i][j] == M[i][i]) && (M[j][j] + M[i][j] == M[j][j])) {
       M[i][j] = 0.0;
       max_idx_row[i] = MaxEntryRow(M,i); //must also update max_idx_row[i]
-      continue;
     }
+
+    if (M[i][j] == 0.0)
+      break;
 
     // Otherwise, apply a rotation to make M[i][j] = 0
     CalcRot(M, i, j);  // Calculate the parameters of the rotation matrix.
@@ -470,7 +473,6 @@ Init() {
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 SetSize(int n) {
-  assert(n >= 2);
   Dealloc();
   Alloc(n);
 }

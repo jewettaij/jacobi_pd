@@ -1,6 +1,8 @@
-// @file matrix_alloc.hpp
-// @brief  Because I allocate 2-dimensional arrays frequently, I created a 
-//         few optional functions that make this more convenient.
+/// @file    matrix_alloc.hpp
+/// @brief   Because I allocate 2-dimensional arrays frequently, I created a 
+///          few optional functions that make this more convenient.
+/// @author  Andrew Jewett
+/// @license CC0-1.0
 
 #include<cassert>
 
