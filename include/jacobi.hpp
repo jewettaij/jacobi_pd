@@ -123,7 +123,7 @@ private:
   void Dealloc();
 
 public:
-  // memory management: copy & move constructors, swap, and assignment operator
+  // memory management: copy and move constructor, swap, and assignment operator
   Jacobi(const Jacobi<Scalar, Vector, Matrix, ConstMatrix>& source);
   Jacobi(Jacobi<Scalar, Vector, Matrix, ConstMatrix>&& other);
   void swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other);
