@@ -19,7 +19,7 @@ It is [free of copyright](https://creativecommons.org/publicdomain/zero/1.0/).
 The Jacobi algorithm remains one of the oldest and most popular methods for
 diagonalizing dense, square, real, symmetric matrices.
 
-The matrices themselves can be implemented as \*\*X (pointer-to-pointer),
+The matrices themselves can be implemented as X\*\* (pointer-to-pointer),
 vector\<vector\<X\>\>&, fixed-size arrays,
 or any other C or C++ object which supports double-indexing.
 (Here **X** is any real numeric type.  Complex numbers are not supported.)
