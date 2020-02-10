@@ -65,13 +65,13 @@ public:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
   /// @returns The number_of_sweeps (= number_of_iterations / (n*(n-1)/2)).
   ///          If this equals max_num_sweeps, the algorithm failed to converge.
-  /// @note  To reduce the computation time further, set calc_evects=false.
+  /// @note  To reduce the computation time further, set calc_evecs=false.
   int
   Diagonalize(ConstMatrix mat, //!< the matrix you wish to diagonalize (size n)
               Vector eval,   //!< store the eigenvalues here
               Matrix evec,   //!< store the eigenvectors here (in rows)
               SortCriteria sort_criteria=SORT_DECREASING_EVALS,//!<sort results?
-              bool calc_evects=true,     //!< calculate the eigenvectors?
+              bool calc_evecs=true,      //!< calculate the eigenvectors?
               int max_num_sweeps = 50);  //!< limit the number of iterations
 
 private:

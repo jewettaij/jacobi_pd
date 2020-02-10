@@ -188,13 +188,13 @@ void GenRandOrth(Matrix R,
 
 /// @brief  Generate a random symmetric n x n matrix, M.
 /// This function generates random numbers for the eigenvalues ("evals_known")
-/// as well as the eigenvectors ("evects_known"), and uses them to generate M.
+/// as well as the eigenvectors ("evecs_known"), and uses them to generate M.
 /// The "eval_magnitude_range" argument specifies the the base-10 logarithm
 /// of the range of eigenvalues desired.  The "n_degeneracy" argument specifies
 /// the number of repeated eigenvalues desired (if any).
 /// @returns  This function does not return a value.  However after it is
 ///           invoked, the M matrix will be filled with random numbers.
-///           Additionally, the "evals" and "evects" arguments will contain
+///           Additionally, the "evals" and "evecs" arguments will contain
 ///           the eigenvalues and eigenvectors (one eigenvector per row)
 ///           of the matrix.  Later, they can be compared with the eigenvalues
 ///           and eigenvectors calculated by Jacobi::Diagonalize()
@@ -203,7 +203,7 @@ template <typename Scalar, typename Vector, typename Matrix>
 void GenRandSymm(Matrix M,       //<! store the matrix here
                  int n,          //<! matrix size
                  Vector evals,   //<! store the eigenvalues of here
-                 Matrix evects,  //<! store the eigenvectors here
+                 Matrix evecs,   //<! store the eigenvectors here
                  std::default_random_engine &generator,//<! makes random numbers
                  Scalar min_eval_size=0.1, //<! minimum possible eigenvalue size
                  Scalar max_eval_size=10.0,//<! maximum possible eigenvalue size
@@ -266,13 +266,13 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
     for (int j = 0; j < n; j++)
       D[i][j] = ((i == j) ? evals[i] : 0.0);
 
-  // Now randomly generate the (transpose of) the "evects" matrix
-  GenRandOrth<Scalar, Matrix>(evects, n, generator); //(will transpose it later)
+  // Now randomly generate the (transpose of) the "evecs" matrix
+  GenRandOrth<Scalar, Matrix>(evecs, n, generator); //(will transpose it later)
 
   // Construct the test matrix, M, where M = Rt * D * R
 
   // Original code:
-  //mmult(evects, D, tmp, n);  // <--> tmp = Rt * D
+  //mmult(evecs, D, tmp, n);  // <--> tmp = Rt * D
   // Unfortunately, C++ guesses the types incorrectly.  Must manually specify:
   // #ifdefs making the code ugly again:
   #if defined USE_VECTOR_OF_VECTORS
@@ -284,14 +284,14 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
   #else
   mmult<Scalar**, Scalar const *const *>
   #endif
-       (evects, D, tmp, n);
+       (evecs, D, tmp, n);
 
   for (int i = 0; i < n-1; i++)
     for (int j = i+1; j < n; j++)
-      std::swap(evects[i][j], evects[j][i]); //transpose "evects"
+      std::swap(evecs[i][j], evecs[j][i]); //transpose "evecs"
 
   // Original code:
-  //mmult(tmp, evects, M, n);
+  //mmult(tmp, evecs, M, n);
   // Unfortunately, C++ guesses the types incorrectly.  Must manually specify:
   // #ifdefs making the code ugly again:
   #if defined USE_VECTOR_OF_VECTORS
@@ -303,8 +303,8 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
   #else
   mmult<Scalar**, Scalar const *const *>
   #endif
-       (tmp, evects, M, n);
-  //at this point M = Rt*D*R (where "R"="evects")
+       (tmp, evecs, M, n);
+  //at this point M = Rt*D*R (where "R"="evecs")
 
   #if defined USE_C_POINTER_TO_POINTERS
   Dealloc2D(&D);
@@ -357,8 +357,8 @@ void TestJacobi(int n, //<! matrix size
 
   // allocate the matrix, eigenvalues, eigenvectors
   vector<vector<Scalar> > M(n, vector<Scalar>(n));
-  vector<vector<Scalar> > evects(n, vector<Scalar>(n));
-  vector<vector<Scalar> > evects_known(n, vector<Scalar>(n));
+  vector<vector<Scalar> > evecs(n, vector<Scalar>(n));
+  vector<vector<Scalar> > evecs_known(n, vector<Scalar>(n));
   vector<Scalar> evals(n);
   vector<Scalar> evals_known(n);
   vector<Scalar> test_evec(n);
@@ -375,8 +375,8 @@ void TestJacobi(int n, //<! matrix size
     ecalc(n);
   // allocate the matrix, eigenvalues, eigenvectors
   array<array<Scalar, NF>, NF> M;
-  array<array<Scalar, NF>, NF> evects;
-  array<array<Scalar, NF>, NF> evects_known;
+  array<array<Scalar, NF>, NF> evecs;
+  array<array<Scalar, NF>, NF> evecs_known;
   array<Scalar, NF> evals;
   array<Scalar, NF> evals_known;
   array<Scalar, NF> test_evec;
@@ -389,8 +389,8 @@ void TestJacobi(int n, //<! matrix size
   Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]> ecalc(n);
   // allocate the matrix, eigenvalues, eigenvectors
   Scalar M[NF][NF];
-  Scalar evects[NF][NF];
-  Scalar evects_known[NF][NF];
+  Scalar evecs[NF][NF];
+  Scalar evecs_known[NF][NF];
   Scalar evals[NF];
   Scalar evals_known[NF];
   Scalar test_evec[NF];
@@ -413,10 +413,10 @@ void TestJacobi(int n, //<! matrix size
   // test the copy constructor
   Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*> ecalc(ecalc_test_mem2);
   // allocate the matrix, eigenvalues, eigenvectors
-  Scalar **M, **evects, **evects_known;
+  Scalar **M, **evecs, **evecs_known;
   Alloc2D(n, n, &M);
-  Alloc2D(n, n, &evects);
-  Alloc2D(n, n, &evects_known);
+  Alloc2D(n, n, &evecs);
+  Alloc2D(n, n, &evecs_known);
   Scalar *evals = new Scalar[n];
   Scalar *evals_known = new Scalar[n];
   Scalar *test_evec = new Scalar[n];
@@ -432,7 +432,7 @@ void TestJacobi(int n, //<! matrix size
 
     // Create a randomly generated symmetric matrix.
     //This function generates random numbers for the eigenvalues ("evals_known")
-    //as well as the eigenvectors ("evects_known"), and uses them to generate M.
+    //as well as the eigenvectors ("evecs_known"), and uses them to generate M.
 
     #if defined USE_VECTOR_OF_VECTORS
     GenRandSymm<Scalar, vector<Scalar>&, vector<vector<Scalar> >&>
@@ -446,7 +446,7 @@ void TestJacobi(int n, //<! matrix size
                (M,
                 n,
                 evals_known,
-                evects_known,
+                evecs_known,
                 generator,
                 min_eval_size,
                 max_eval_size,
@@ -454,7 +454,7 @@ void TestJacobi(int n, //<! matrix size
 
     // Sort the matrix evals and eigenvector rows:
     // Original code:
-    //SortRows<Scalar>(evals_known, evects_known, n);
+    //SortRows<Scalar>(evals_known, evecs_known, n);
     // Unfortunately, C++ guesses the types incorrectly. Must use #ifdefs again:
     #if defined USE_VECTOR_OF_VECTORS
     SortRows<Scalar, vector<Scalar>&, vector<vector<Scalar> >&>
@@ -465,7 +465,7 @@ void TestJacobi(int n, //<! matrix size
     #else
     SortRows<Scalar, Scalar*, Scalar**>
     #endif
-            (evals_known, evects_known, n);
+            (evals_known, evecs_known, n);
 
 
     if (n_matrices == 1) {
@@ -476,7 +476,7 @@ void TestJacobi(int n, //<! matrix size
       cout << "Eigenvectors (rows) which are known in advance:\n";
       for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++)
-          cout << evects_known[i][j] << " ";
+          cout << evecs_known[i][j] << " ";
         cout << "\n";
       }
       cout << "  (The eigenvectors calculated by Jacobi::Diagonalize() should match these.)\n";
@@ -488,13 +488,13 @@ void TestJacobi(int n, //<! matrix size
 
         // test SORT_INCREASING_ABS_EVALS:
         #if defined USE_VECTOR_OF_VECTORS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_INCREASING_ABS_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_INCREASING_ABS_EVALS);
         #elif defined USE_ARRAY_OF_ARRAYS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_INCREASING_ABS_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_INCREASING_ABS_EVALS);
         #elif defined USE_C_FIXED_SIZE_ARRAYS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_INCREASING_ABS_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_INCREASING_ABS_EVALS);
         #else
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_INCREASING_ABS_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_INCREASING_ABS_EVALS);
         #endif
 
         for (int i = 1; i < n; i++)
@@ -502,13 +502,13 @@ void TestJacobi(int n, //<! matrix size
 
         // test SORT_DECREASING_ABS_EVALS:
         #if defined USE_VECTOR_OF_VECTORS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_DECREASING_ABS_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_DECREASING_ABS_EVALS);
         #elif defined USE_ARRAY_OF_ARRAYS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_DECREASING_ABS_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_DECREASING_ABS_EVALS);
         #elif defined USE_C_FIXED_SIZE_ARRAYS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_DECREASING_ABS_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_DECREASING_ABS_EVALS);
         #else
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_DECREASING_ABS_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_DECREASING_ABS_EVALS);
         #endif
 
         for (int i = 1; i < n; i++)
@@ -516,33 +516,33 @@ void TestJacobi(int n, //<! matrix size
 
         // test SORT_INCREASING_EVALS:
         #if defined USE_VECTOR_OF_VECTORS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_INCREASING_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_INCREASING_EVALS);
         #elif defined USE_ARRAY_OF_ARRAYS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_INCREASING_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_INCREASING_EVALS);
         #elif defined USE_C_FIXED_SIZE_ARRAYS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_INCREASING_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_INCREASING_EVALS);
         #else
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_INCREASING_EVALS);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_INCREASING_EVALS);
         #endif
         for (int i = 1; i < n; i++)
           assert(evals[i-1] <= evals[i]);
 
         // test DO_NOT_SORT
         #if defined USE_VECTOR_OF_VECTORS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::DO_NOT_SORT);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::DO_NOT_SORT);
         #elif defined USE_ARRAY_OF_ARRAYS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::DO_NOT_SORT);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::DO_NOT_SORT);
         #elif defined USE_C_FIXED_SIZE_ARRAYS
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::DO_NOT_SORT);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::DO_NOT_SORT);
         #else
-        ecalc.Diagonalize(M, evals, evects, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::DO_NOT_SORT);
+        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::DO_NOT_SORT);
         #endif
 
       } //if (test_code_coverage)
 
 
       // Now (finally) calculate the eigenvalues and eigenvectors
-      int n_sweeps = ecalc.Diagonalize(M, evals, evects);
+      int n_sweeps = ecalc.Diagonalize(M, evals, evecs);
 
       if ((n_matrices == 1) && (i_test == 0)) {
         cout <<"Jacobi::Diagonalize() ran for "<<n_sweeps<<" iters (sweeps).\n";
@@ -553,7 +553,7 @@ void TestJacobi(int n, //<! matrix size
         cout << "Eigenvectors (rows) calculated by Jacobi::Diagonalize()\n";
         for (int i = 0; i < n; i++) {
           for (int j = 0; j < n; j++)
-            cout << evects[i][j] << " ";
+            cout << evecs[i][j] << " ";
           cout << "\n";
         }
       }
@@ -561,13 +561,13 @@ void TestJacobi(int n, //<! matrix size
       Scalar eps=1.0e-06;
       assert(SimilarVec(evals, evals_known, n, eps*max_eval_size, eps));
       //Check that each eigenvector satisfies Mv = λv
-      // <-->  Σ_b  M[a][b]*evects[i][b] = evals[i]*evects[i][b]   (for all a)
+      // <-->  Σ_b  M[a][b]*evecs[i][b] = evals[i]*evecs[i][b]   (for all a)
       for (int i = 0; i < n; i++) {
         for (int a = 0; a < n; a++) {
           test_evec[a] = 0.0;
           for (int b = 0; b < n; b++)
-            test_evec[a] += M[a][b] * evects[i][b];
-          assert(Similar(test_evec[a], evals[i] * evects[i][a], eps, eps));
+            test_evec[a] += M[a][b] * evecs[i][b];
+          assert(Similar(test_evec[a], evals[i] * evecs[i][a], eps, eps));
         }
       }
 
@@ -577,8 +577,8 @@ void TestJacobi(int n, //<! matrix size
 
   #if defined USE_C_POINTER_TO_POINTERS
   Dealloc2D(&M);
-  Dealloc2D(&evects);
-  Dealloc2D(&evects_known);
+  Dealloc2D(&evecs);
+  Dealloc2D(&evecs_known);
   delete [] evals;
   delete [] evals_known;
   delete [] test_evec;
