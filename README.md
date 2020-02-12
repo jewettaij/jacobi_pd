@@ -69,16 +69,17 @@ double **evects; // Store the eigenvectors here.
 // Now create an instance of Jacobi ("eigen_calc").  This will allocate space
 // for storing intermediate calculations.  Once created, it can be reused
 // multiple times without incurring the cost of allocating memory on the heap.
+
 Jacobi<double, double*, double**> eigen_calc(n);
 
 // Note:
-// If the matrix you plan to diagonalize is read-only, you can use this instead:
+// If the matrix you plan to diagonalize (M) is read-only, use this instead:
 // Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
 // If you prefer using vectors over C-style pointers, this works also:
-// Jacobi<double, vector<double>&, vector<vector<double>>&,
-//        vector<vector<double>>&>  eigen_calc(n);
+// Jacobi<double, vector<double>&, vector<vector<double>>&> eigen_calc(n);
 
 // Now, calculate the eigenvalues and eigenvectors of M
+
 eigen_calc.Diagonalize(M, evals, evects);
 ```
 
