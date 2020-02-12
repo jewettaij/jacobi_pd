@@ -24,8 +24,10 @@ using namespace matrix_alloc;
 /// @note  The "Vector" and "Matrix" type arguments can be any 
 ///        C or C++ object that support indexing, including pointers or vectors.
 
-template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
-
+template<typename Scalar,
+         typename Vector,
+         typename Matrix,
+         typename ConstMatrix=Matrix>
 class Jacobi
 {
   int n;            //!< the size of the matrix

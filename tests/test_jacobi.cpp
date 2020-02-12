@@ -144,7 +144,7 @@ SortRows(Vector eval,
 template<typename Scalar, typename Matrix>
 void GenRandOrth(Matrix R,
                  int n,
-                 std::default_random_engine &generator)
+                 std::default_random_engine &rand_generator)
 {
   std::normal_distribution<Scalar> gaussian_distribution(0,1);
   std::vector<Scalar> v(n);
@@ -157,7 +157,7 @@ void GenRandOrth(Matrix R,
       // Generate a vector in a random direction
       // (This works because we are using a normal (Gaussian) distribution)
       for (int j = 0; j < n; j++)
-        v[j] = gaussian_distribution(generator);
+        v[j] = gaussian_distribution(rand_generator);
 
       //Now subtract from v, the projection of v onto the first i-1 rows of R.
       //This will produce a vector which is orthogonal to these i-1 row-vectors.
@@ -204,7 +204,7 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
                  int n,          //<! matrix size
                  Vector evals,   //<! store the eigenvalues of here
                  Matrix evecs,   //<! store the eigenvectors here
-                 std::default_random_engine &generator,//<! makes random numbers
+                 std::default_random_engine &rand_generator,//<! makes random numbers
                  Scalar min_eval_size=0.1, //<! minimum possible eigenvalue size
                  Scalar max_eval_size=10.0,//<! maximum possible eigenvalue size
                  int n_degeneracy=1//<!number of repeated eigevalues(1disables)
@@ -239,14 +239,14 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
       assert((min_eval_size > 0.0) && (max_eval_size > 0.0));
       Scalar log_min = std::log(std::abs(min_eval_size));
       Scalar log_max = std::log(std::abs(max_eval_size));
-      Scalar log_eval = (log_min + random_real01(generator)*(log_max-log_min));
+      Scalar log_eval = (log_min + random_real01(rand_generator)*(log_max-log_min));
       evals[i] = std::exp(log_eval);
       // also consider both positive and negative eigenvalues:
-      if (random_real01(generator) < 0.5)
+      if (random_real01(rand_generator) < 0.5)
         evals[i] = -evals[i];
     }
     else {
-      evals[i] = gaussian_distribution(generator);
+      evals[i] = gaussian_distribution(rand_generator);
     }
   }
 
@@ -255,7 +255,7 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
     int *permutation = new int[n]; //a random permutation from 0...n-1
     for (int i = 0; i < n; i++)
       permutation[i] = i;
-    std::shuffle(permutation, permutation+n, generator);
+    std::shuffle(permutation, permutation+n, rand_generator);
     for (int i = 1; i < n_degeneracy; i++) //set the first n_degeneracy to same
       evals[permutation[i]] = evals[permutation[0]];
     delete [] permutation;
@@ -267,7 +267,7 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
       D[i][j] = ((i == j) ? evals[i] : 0.0);
 
   // Now randomly generate the (transpose of) the "evecs" matrix
-  GenRandOrth<Scalar, Matrix>(evecs, n, generator); //(will transpose it later)
+  GenRandOrth<Scalar, Matrix>(evecs, n, rand_generator); //(will transpose it later)
 
   // Construct the test matrix, M, where M = Rt * D * R
 
@@ -337,7 +337,7 @@ void TestJacobi(int n, //<! matrix size
 
   if (seed == 0) // if the caller did not specify a seed, use the system clock
     seed = std::chrono::system_clock::now().time_since_epoch().count();
-  std::default_random_engine generator(seed);
+  std::default_random_engine rand_generator(seed);
 
 
 
@@ -349,11 +349,14 @@ void TestJacobi(int n, //<! matrix size
   
   #if defined USE_VECTOR_OF_VECTORS
 
-  Jacobi<Scalar,
-         vector<Scalar>&,
-         vector<vector<Scalar> >&,
-         vector<vector<Scalar> >& >
-    ecalc(n);
+  Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >& > ecalc(n);
+
+  // Note: This also works:
+  //Jacobi<Scalar,
+  //       vector<Scalar>&,
+  //       vector<vector<Scalar> >&,
+  //       vector<vector<Scalar> >& >
+  //  ecalc(n);
 
   // allocate the matrix, eigenvalues, eigenvectors
   vector<vector<Scalar> > M(n, vector<Scalar>(n));
@@ -368,11 +371,15 @@ void TestJacobi(int n, //<! matrix size
   n = NF;
   cout << "Testing std::array (fixed size).\n"
     "(Ignoring first argument, and setting matrix size to " << n << ")" << endl;
-  Jacobi<Scalar,
-         array<Scalar, NF>&,
-         array<array<Scalar, NF>, NF>&,
-         array<array<Scalar, NF>, NF>& >
-    ecalc(n);
+
+  Jacobi<Scalar, array<Scalar, NF>&, array<array<Scalar, NF>, NF>&> ecalc(n);
+  // Note: This also works:
+  //Jacobi<Scalar,
+  //       array<Scalar, NF>&,
+  //       array<array<Scalar, NF>, NF>&,
+  //       array<array<Scalar, NF>, NF>& >
+  //  ecalc(n);
+
   // allocate the matrix, eigenvalues, eigenvectors
   array<array<Scalar, NF>, NF> M;
   array<array<Scalar, NF>, NF> evecs;
@@ -447,7 +454,7 @@ void TestJacobi(int n, //<! matrix size
                 n,
                 evals_known,
                 evecs_known,
-                generator,
+                rand_generator,
                 min_eval_size,
                 max_eval_size,
                 n_degeneracy);
@@ -603,9 +610,9 @@ int main(int argc, char **argv) {
       "Description: Run Jacobi::Diagonalize() on randomly generated matrices.\n"
       "\n"
       "Arguments: n_size [n_matr emin emax n_degeneracy n_tests seed]\n"
-      "       n_size  = the size of the matrices\n"
+      "        n_size = the size of the matrices\n"
       "    (NOTE: The remaining arguments are optional.)\n"
-      "       n_matr  = the number of randomly generated matrices to test\n"
+      "        n_matr = the number of randomly generated matrices to test\n"
       "          emin = the smallest possible eigenvalue magnitude (eg. 1e-05)\n"
       "          emax = the largest possible eigenvalue magnitude (>0 eg. 1e+05)\n"
       "    (NOTE: If emin=0, a normal distribution is used centered at 0.\n"
@@ -617,7 +624,7 @@ int main(int argc, char **argv) {
       "                 program for benchmarking (speed testing), because the time\n"
       "                 needed for generating a random matrix is not negligible.)\n"
       "    (NOTE: IF THIS NUMBER IS 0, it will test CODE-COVERAGE instead.)\n"
-      "          seed = the seed used by the random number generator.\n"
+      "          seed = the seed used by the random number \"rand_generator\".\n"
       "                 (By default, the system clock is used.)\n"
          << endl;
     return 1;
