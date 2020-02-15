@@ -479,6 +479,8 @@ SetSize(int n) {
   Alloc(n);
 }
 
+// memory management:
+
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 Alloc(int n) {
@@ -497,6 +499,8 @@ Dealloc() {
   Dealloc2D(&M);
   Init();
 }
+
+// memory management: copy and move constructor, swap, and assignment operator:
 
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
