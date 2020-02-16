@@ -18,9 +18,6 @@ using namespace matrix_alloc;
 /// @class Jacobi
 /// @brief Calculate the eigenvalues and eigevectors of a symmetric matrix
 ///        using the Jacobi eigenvalue algorithm.
-///        The algorithm implemented here follows the strategy explained here:
-///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
-///        https://web.stanford.edu/class/cme335/lecture7.pdf
 /// @note  The "Vector" and "Matrix" type arguments can be any 
 ///        C or C++ object that support indexing, including pointers or vectors.
 
@@ -62,7 +59,7 @@ public:
     SORT_INCREASING_ABS_EVALS
   } SortCriteria;
 
-  /// @brief Calculate the eigenvalues and eigevectors of a symmetric matrix
+  /// @brief Calculate all the eigenvalues and eigevectors of a symmetric matrix
   ///        using the Jacobi eigenvalue algorithm:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
   /// @returns The number_of_sweeps (= number_of_iterations / (n*(n-1)/2)).
@@ -231,16 +228,15 @@ CalcRot(Scalar const *const *M,    // matrix
   s = c*t;
 }
 
-
-/// brief   Perform a similarity transformation by multiplying matrix M on both
-///         sides by a rotation matrix (and its transpose).
-///         This rotation matrix performs a rotation in the i,j plane by
+/// brief  Perform a similarity transformation by multiplying matrix M on both
+///         sides by a rotation matrix (and its transpose) to eliminate M[i][j].
+/// details This rotation matrix performs a rotation in the i,j plane by
 ///         angle θ.  This function assumes that c=cos(θ). s=som(θ), t=tan(θ)
 ///         have been calculated in advance (using the CalcRot() function).
 ///         It also assumes that i<j.  The max_idx_row[] array is also updated.
 ///         To save time, since the matrix is symmetric, the elements
 ///         below the diagonal (ie. M[u][v] where u>v) are not computed.
-/// @code
+/// verbatim
 ///   M' = R^T * M * R
 /// where R the rotation in the i,j plane and ^T denotes the transpose.
 ///                 i         j
@@ -258,11 +254,14 @@ CalcRot(Scalar const *const *M,    // matrix
 ///      |                        .      |
 ///      |                          .    |
 ///      |_                           1 _|
-/// @endcode
+/// endverbatim
 ///
 /// Let M' denote the matrix M after multiplication by R^T and R.
 /// The components of M' are:
+///
+/// verbatim
 ///   M'_uv =  Σ_w  Σ_z   R_wu * M_wz * R_zv
+/// endverbatim
 ///
 /// Note that a the rotation at location i,j will modify all of the matrix
 /// elements containing at least one index which is either i or j
@@ -275,7 +274,7 @@ CalcRot(Scalar const *const *M,    // matrix
 /// (ie. matrix elements whose second index is > the first index).
 /// The modified elements we must consider are marked with an "X" below:
 ///
-/// @code
+/// @verbatim
 ///                 i         j
 ///       _                             _
 ///      |  .       X         X          | 
@@ -292,7 +291,7 @@ CalcRot(Scalar const *const *M,    // matrix
 ///      |                        .      |
 ///      |                          .    |
 ///      |_                           . _|
-/// @endcode
+/// @endverbatim
 
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
@@ -326,7 +325,6 @@ ApplyRot(Scalar **M,  // matrix
     else if (std::abs(M[w][i])>std::abs(M[w][max_idx_row[w]])) max_idx_row[w]=i;
     //assert(max_idx_row[w] == MaxEntryRow(M, w));
   }
-
   for (int w=i+1; w < j; w++) {      // 0 <= i <  w  <  j < n
     M[w][i] = M[i][w]; //backup the previous value. store below diagonal (w>i)
     M[i][w] = c*M[i][w] - s*M[w][j]; //M[i][w], M[w][j] from previous iteration
@@ -339,7 +337,7 @@ ApplyRot(Scalar **M,  // matrix
   // now that we're done modifying row i, we can update max_idx_row[i]
   max_idx_row[i] = MaxEntryRow(M, i);
 
-  //compute M[w][j] and M[w][j] for all w!=j,considering above-diagonal elements
+  //compute M[w][j] and M[j][w] for all w!=j,considering above-diagonal elements
   for (int w=0; w < i; w++) {        // 0 <=  w  <  i <  j < n
     M[w][j] = s*M[i][w] + c*M[w][j]; //M[i][w], M[w][j] from previous iteration
     if (j == max_idx_row[w]) max_idx_row[w] = MaxEntryRow(M, w);
@@ -363,12 +361,12 @@ ApplyRot(Scalar **M,  // matrix
 
 
 
-/// brief Multiply matrix M on the LEFT side by a transposed rotation matrix R^T
+///@brief Multiply matrix M on the LEFT side by a transposed rotation matrix R^T
 ///       This matrix performs a rotation in the i,j plane by angle θ  (where
 ///       the arguments "s" and "c" refer to cos(θ) and sin(θ), respectively).
-/// @code
+/// @verbatim
 ///   E'_uv = Σ_w  R_wu * E_wv
-/// @endcode
+/// @endverbatim
 
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
