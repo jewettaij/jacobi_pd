@@ -35,7 +35,7 @@ void Alloc2D(size_t nrows,          // size of the array (number of rows)
 {
   assert(paaX);
   *paaX = new Entry* [nrows];  //conventional 2D C array (pointer-to-pointer)
-  (*paaX)[0] = new Entry [nrows * ncols];  // 1D C array (contiguous memor)
+  (*paaX)[0] = new Entry [nrows * ncols];  // 1D C array (contiguous memory)
   for(size_t iy=0; iy<nrows; iy++)
     (*paaX)[iy] = (*paaX)[0] + iy*ncols;
   // The caller can access the contents using (*paaX)[i][j]

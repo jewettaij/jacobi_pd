@@ -29,17 +29,17 @@ or any other C or C++ object which supports \[\]\[\].
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
-In early 2020, no simple *public domain* C++11 code
+As of 2020, no simple *public domain* C++11 code
 yet exists for matrix diagonalization.
-Other C++ libraries such as Eigen or GSL use somewhat more restrictive licenses.
-*(On several occasions, this has prevented me from borrowing
-code from these libraries to contribute to other open-source
-projects with incompatible licenses.)*
+Other C++ libraries such as Eigen or GSL are typically
+much larger and use more restrictive licenses.
+*(On several occasions, this has prevented me from including
+their code in other open-source projects with incompatible licenses.)*
 Some repositories may unwittingly contain code
 snippets from other sources, such as
 [numerical recipes](http://mingus.as.arizona.edu/~bjw/software/boycottnr.html).
-This repository was written from scratch.  No lines of code were borrowed
-or adapted from other sources.
+This short repository was written from scratch.
+No lines of code were borrowed or adapted from other sources.
 
 
 
