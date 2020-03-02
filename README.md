@@ -24,7 +24,7 @@ vector\<vector\<X\>\>&, fixed-size arrays,
 or any other C or C++ object which supports \[\]\[\].
 (Here **X** is any real numeric type.  Complex numbers are not supported.)
 
-*(Memory allocation on the heap is avoided except during initialization.)*
+*(Memory allocation on the heap is avoided except during instantiation.)*
 
 
 #### The main feature of this repository is it's [license](LICENSE.md).

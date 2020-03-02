@@ -76,18 +76,17 @@ public:
 private:
 
   /// @brief Calculate the components of a rotation matrix which performs a
-  ///        rotation in the i,j plane by an angle (θ) that (when multiplied on
-  ///        both sides) will zero the ij'th element of M, so that afterwards
-  ///        M[i][j] = 0.  The results will be stored in c, s, and t
-  ///        (which store cos(θ), sin(θ), and tan(θ), respectively).
+  ///        rotation in the i,j plane by an angle (θ) causing M[i][j]=0.
+  ///        The resulting parameters will be stored in this->c, this->s, and
+  ///        this->t (which store cos(θ), sin(θ), and tan(θ), respectively).
   void CalcRot(Scalar const *const *M,   //!< matrix
                int i,      //!< row index
                int j);     //!< column index
 
   /// @brief Apply the (previously calculated) rotation matrix to matrix M
   ///        by multiplying it on both sides (a "similarity transform").
-  ///        (To save time, only update the elements in the upper-right
-  ///         triangular region of the matrix.  It is assumed that i < j.)
+  ///        (To save time, only the elements in the upper-right-triangular
+  ///         region of the matrix are updated.  It is assumed that i < j.)
   void ApplyRot(Scalar **M,  //!< matrix
                 int i,     //!< row index
                 int j);    //!< column index
