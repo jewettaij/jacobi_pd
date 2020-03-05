@@ -399,11 +399,11 @@ template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 MaxEntry(Scalar const *const *M, int& i_max, int& j_max) const {
   // find the maximum entry in the matrix M in O(n) time
-  i_max = 0; // (start with an arbitrary
-  j_max = 1; //  off-diagonal element: M[0][1])
+  i_max = 0;
+  j_max = max_idx_row[i_max];
   Scalar max_entry = std::abs(M[i_max][j_max]);
   int nm1 = n-1;
-  for (int i=0; i < nm1; i++) {
+  for (int i=1; i < nm1; i++) {
     int j = max_idx_row[i];
     if (std::abs(M[i][j]) > max_entry) {
       max_entry = std::abs(M[i][j]);
