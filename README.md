@@ -21,7 +21,7 @@ diagonalizing dense, square, real, symmetric matrices.
 
 The matrices themselves can be implemented as X\*\* (pointer-to-pointer),
 vector\<vector\<X\>\>&, fixed-size arrays,
-or any other C or C++ object which supports \[\]\[\].
+or any other C or C++ object which supports \[i\]\[j\] indexing.
 (Here **X** is any real numeric type.  Complex numbers are not supported.)
 
 *(Memory allocation on the heap is avoided except during instantiation.)*
