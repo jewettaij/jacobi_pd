@@ -38,20 +38,26 @@ const int NF=5;  //(the array size must be known at compile time)
 // @brief  Are two numbers "similar"?
 template<typename Scalar>
 inline static bool Similar(Scalar a, Scalar b,
-                           Scalar eps=1.0e-06, Scalar ratio=1.0e-06)
+                           Scalar eps=1.0e-06,
+                           Scalar ratio=1.0e-06,
+                           Scalar ratio_denom=1.0)
 {
   return ((std::abs(a-b)<=std::abs(eps))
           ||
-          (std::abs(a-b)<=std::abs(ratio)*0.5*(std::abs(a)+std::abs(b))));
+          (std::abs(ratio_denom)*std::abs(a-b)
+           <=
+           std::abs(ratio)*0.5*(std::abs(a)+std::abs(b))));
 }
 
 /// @brief  Are two vectors (containing n numbers) similar?
 template<typename Scalar, typename Vector>
 inline static bool SimilarVec(Vector a, Vector b, int n,
-                              Scalar eps=1.0e-06, Scalar ratio=1.0e-06)
+                              Scalar eps=1.0e-06,
+                              Scalar ratio=1.0e-06,
+                              Scalar ratio_denom=1.0)
 {
   for (int i = 0; i < n; i++)
-    if (not Similar(a[i], b[i], eps, ratio))
+    if (not Similar(a[i], b[i], eps, ratio, ratio_denom))
       return false;
   return true;
 }
@@ -59,13 +65,15 @@ inline static bool SimilarVec(Vector a, Vector b, int n,
 /// @brief  Are two vectors (or their reflections) similar?
 template<typename Scalar, typename Vector>
 inline static bool SimilarVecUnsigned(Vector a, Vector b, int n,
-                                      Scalar eps=1.0e-06, Scalar ratio=1.0e-06)
+                                      Scalar eps=1.0e-06,
+                                      Scalar ratio=1.0e-06,
+                                      Scalar ratio_denom=1.0)
 {
   if (SimilarVec(a, b, n, eps))
     return true;
   else {
     for (int i = 0; i < n; i++)
-      if (not Similar(a[i], -b[i], eps, ratio))
+      if (not Similar(a[i], -b[i], eps, ratio, ratio_denom))
         return false;
     return true;
   }
@@ -322,7 +330,8 @@ void TestJacobi(int n, //<! matrix size
                 int n_tests_per_matrix=1, //<! repeat test for benchmarking?
 
                 int n_degeneracy=1, //<! repeated eigenvalues?
-                unsigned seed=0 //<! random seed (if 0 then use the clock)
+                unsigned seed=0, //<! random seed (if 0 then use the clock)
+                Scalar eps=1.0e-06
                 )
 {
   bool test_code_coverage = false;
@@ -565,7 +574,6 @@ void TestJacobi(int n, //<! matrix size
         }
       }
 
-      Scalar eps=1.0e-06;
       assert(SimilarVec(evals, evals_known, n, eps*max_eval_size, eps));
       //Check that each eigenvector satisfies Mv = λv
       // <-->  Σ_b  M[a][b]*evecs[i][b] = evals[i]*evecs[i][b]   (for all a)
@@ -574,7 +582,12 @@ void TestJacobi(int n, //<! matrix size
           test_evec[a] = 0.0;
           for (int b = 0; b < n; b++)
             test_evec[a] += M[a][b] * evecs[i][b];
-          assert(Similar(test_evec[a], evals[i] * evecs[i][a], eps, eps));
+          assert(Similar(test_evec[a],
+                         evals[i] * evecs[i][a],
+                         eps,  // tolerance (absolute difference)
+                         eps*max_eval_size, // tolerance ratio (numerator)
+                         evals_known[i] // tolerance ration (denominator)
+                         ));
         }
       }
 
@@ -609,7 +622,7 @@ int main(int argc, char **argv) {
       "\n"
       "Description: Run Jacobi::Diagonalize() on randomly generated matrices.\n"
       "\n"
-      "Arguments: n_size [n_matr emin emax n_degeneracy n_tests seed]\n"
+      "Arguments: n_size [n_matr emin emax n_degeneracy n_tests seed eps]\n"
       "        n_size = the size of the matrices\n"
       "    (NOTE: The remaining arguments are optional.)\n"
       "        n_matr = the number of randomly generated matrices to test\n"
@@ -619,13 +632,21 @@ int main(int argc, char **argv) {
       "           Otherwise a log-uniform distribution is used from emin to emax.)\n"
       "  n_degeneracy = the number of repeated eigenvalues (1 disables, default)\n"
       "       n_tests = the number of times the eigenvalues and eigenvectors\n"
-      "                 are calculated for EACH matrix.  By default this is 1\n"
+      "                 are calculated for EACH matrix.  By default this is 1.\n"
       "                 (Increase this to at least 20 if you plan to use this\n"
       "                 program for benchmarking (speed testing), because the time\n"
       "                 needed for generating a random matrix is not negligible.)\n"
-      "    (NOTE: IF THIS NUMBER IS 0, it will test CODE-COVERAGE instead.)\n"
+      "                 (IF THIS NUMBER IS 0, it will test CODE-COVERAGE instead.)\n"
       "          seed = the seed used by the random number \"rand_generator\".\n"
-      "                 (By default, the system clock is used.)\n"
+      "                 (If this number is 0, which is the default, the system\n"
+      "                  clock is used to choose a random seed.)\n"
+      "           eps = the tolerance.  The difference between eigenvalues and their\n"
+      "                 true value, cannot exceed this (multiplied by the eigenvalue\n"
+      "                 of maximum magnitude).  Similarly, the difference between\n"
+      "                 the eigenvectors after multiplication by the matrix and by\n"
+      "                 and after multiplication by the eigenvalue, cannot exceed\n"
+      "                 eps*maximum_eigenvalue/eigenvalue.  The default value is\n"
+      "                 1.0e-06 (which works well for double precision numbers).\n"
          << endl;
     return 1;
   }
@@ -643,8 +664,11 @@ int main(int argc, char **argv) {
     n_tests = std::stoi(argv[6]);
   if (argc > 7)
     seed = std::stoi(argv[7]);
+  double eps = 1.0e-06;
+  if (argc > 8)
+    eps = std::stof(argv[8]);
 
-  TestJacobi(n_size, n_matr, emin, emax, n_tests, n_degeneracy, seed);
+  TestJacobi(n_size, n_matr, emin, emax, n_tests, n_degeneracy, seed, eps);
 
   cout << "test passed\n" << endl;
   return EXIT_SUCCESS;
