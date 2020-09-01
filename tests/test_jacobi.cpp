@@ -284,9 +284,9 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
   // Unfortunately, C++ guesses the types incorrectly.  Must manually specify:
   // #ifdefs making the code ugly again:
   #if defined USE_VECTOR_OF_VECTORS
-  mmult<vector<vector<Scalar> >&, vector<vector<Scalar> >&>
+  mmult<vector<vector<Scalar> >&, const vector<vector<Scalar> >&>
   #elif defined USE_ARRAY_OF_ARRAYS
-  mmult<array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>
+  mmult<array<array<Scalar,NF>,NF>&, const array<array<Scalar,NF>,NF>&>
   #elif defined USE_C_FIXED_SIZE_ARRAYS
   mmult<Scalar (*)[NF], Scalar (*)[NF]>
   #else
@@ -303,9 +303,9 @@ void GenRandSymm(Matrix M,       //<! store the matrix here
   // Unfortunately, C++ guesses the types incorrectly.  Must manually specify:
   // #ifdefs making the code ugly again:
   #if defined USE_VECTOR_OF_VECTORS
-  mmult<vector<vector<Scalar> >&, vector<vector<Scalar> >&>
+  mmult<vector<vector<Scalar> >&, const vector<vector<Scalar> >&>
   #elif defined USE_ARRAY_OF_ARRAYS
-  mmult<array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>
+  mmult<array<array<Scalar,NF>,NF>&, const array<array<Scalar,NF>,NF>&>
   #elif defined USE_C_FIXED_SIZE_ARRAYS
   mmult<Scalar (*)[NF], Scalar (*)[NF]>
   #else
@@ -358,14 +358,10 @@ void TestJacobi(int n, //<! matrix size
   
   #if defined USE_VECTOR_OF_VECTORS
 
-  Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >& > ecalc(n);
-
-  // Note: This also works:
-  //Jacobi<Scalar,
-  //       vector<Scalar>&,
-  //       vector<vector<Scalar> >&,
-  //       vector<vector<Scalar> >& >
-  //  ecalc(n);
+  Jacobi<Scalar,
+         vector<Scalar>&,
+         vector<vector<Scalar> >&,
+         const vector<vector<Scalar> >& > ecalc(n);
 
   // allocate the matrix, eigenvalues, eigenvectors
   vector<vector<Scalar> > M(n, vector<Scalar>(n));
@@ -381,13 +377,10 @@ void TestJacobi(int n, //<! matrix size
   cout << "Testing std::array (fixed size).\n"
     "(Ignoring first argument, and setting matrix size to " << n << ")" << endl;
 
-  Jacobi<Scalar, array<Scalar, NF>&, array<array<Scalar, NF>, NF>&> ecalc(n);
-  // Note: This also works:
-  //Jacobi<Scalar,
-  //       array<Scalar, NF>&,
-  //       array<array<Scalar, NF>, NF>&,
-  //       array<array<Scalar, NF>, NF>& >
-  //  ecalc(n);
+  Jacobi<Scalar,
+         array<Scalar, NF>&,
+         array<array<Scalar, NF>, NF>&,
+         const array<array<Scalar, NF>, NF>&> ecalc(n);
 
   // allocate the matrix, eigenvalues, eigenvectors
   array<array<Scalar, NF>, NF> M;
@@ -402,7 +395,11 @@ void TestJacobi(int n, //<! matrix size
   n = NF;
   cout << "Testing C fixed size arrays.\n"
     "(Ignoring first argument, and setting matrix size to " << n << ")" << endl;
-  Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]> ecalc(n);
+  Jacobi<Scalar,
+         Scalar*,
+         Scalar (*)[NF],
+         Scalar const (*)[NF]> ecalc(n);
+
   // allocate the matrix, eigenvalues, eigenvectors
   Scalar M[NF][NF];
   Scalar evecs[NF][NF];
@@ -504,13 +501,37 @@ void TestJacobi(int n, //<! matrix size
 
         // test SORT_INCREASING_ABS_EVALS:
         #if defined USE_VECTOR_OF_VECTORS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_INCREASING_ABS_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 vector<Scalar>&,
+                                 vector<vector<Scalar> >&,
+                                 const vector<vector<Scalar> >& >::SORT_INCREASING_ABS_EVALS);
         #elif defined USE_ARRAY_OF_ARRAYS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_INCREASING_ABS_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 array<Scalar,NF>&,
+                                 array<array<Scalar,NF>,NF>&,
+                                 const array<array<Scalar,NF>,NF>&>::SORT_INCREASING_ABS_EVALS);
         #elif defined USE_C_FIXED_SIZE_ARRAYS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_INCREASING_ABS_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 Scalar*,
+                                 Scalar (*)[NF],
+                                 Scalar const (*)[NF]>::SORT_INCREASING_ABS_EVALS);
         #else
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_INCREASING_ABS_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 Scalar*,
+                                 Scalar**,
+                                 Scalar const*const*>::SORT_INCREASING_ABS_EVALS);
         #endif
 
         for (int i = 1; i < n; i++)
@@ -518,13 +539,37 @@ void TestJacobi(int n, //<! matrix size
 
         // test SORT_DECREASING_ABS_EVALS:
         #if defined USE_VECTOR_OF_VECTORS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_DECREASING_ABS_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 vector<Scalar>&,
+                                 vector<vector<Scalar> >&,
+                                 const vector<vector<Scalar> >& >::SORT_DECREASING_ABS_EVALS);
         #elif defined USE_ARRAY_OF_ARRAYS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_DECREASING_ABS_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 array<Scalar,NF>&,
+                                 array<array<Scalar,NF>,NF>&,
+                                 const array<array<Scalar,NF>,NF>&>::SORT_DECREASING_ABS_EVALS);
         #elif defined USE_C_FIXED_SIZE_ARRAYS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_DECREASING_ABS_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 Scalar*,
+                                 Scalar (*)[NF],
+                                 Scalar const (*)[NF]>::SORT_DECREASING_ABS_EVALS);
         #else
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_DECREASING_ABS_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 Scalar*,
+                                 Scalar**,
+                                 Scalar const*const*>::SORT_DECREASING_ABS_EVALS);
         #endif
 
         for (int i = 1; i < n; i++)
@@ -532,26 +577,74 @@ void TestJacobi(int n, //<! matrix size
 
         // test SORT_INCREASING_EVALS:
         #if defined USE_VECTOR_OF_VECTORS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::SORT_INCREASING_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 vector<Scalar>&,
+                                 vector<vector<Scalar> >&,
+                                 const vector<vector<Scalar> >& >::SORT_INCREASING_EVALS);
         #elif defined USE_ARRAY_OF_ARRAYS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::SORT_INCREASING_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 array<Scalar,NF>&,
+                                 array<array<Scalar,NF>,NF>&,
+                                 const array<array<Scalar,NF>,NF>&>::SORT_INCREASING_EVALS);
         #elif defined USE_C_FIXED_SIZE_ARRAYS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::SORT_INCREASING_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 Scalar*,
+                                 Scalar (*)[NF],
+                                 Scalar const (*)[NF]>::SORT_INCREASING_EVALS);
         #else
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::SORT_INCREASING_EVALS);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 Scalar*,
+                                 Scalar**,
+                                 Scalar const*const*>::SORT_INCREASING_EVALS);
         #endif
         for (int i = 1; i < n; i++)
           assert(evals[i-1] <= evals[i]);
 
         // test DO_NOT_SORT
         #if defined USE_VECTOR_OF_VECTORS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, vector<Scalar>&, vector<vector<Scalar> >&, vector<vector<Scalar> >& >::DO_NOT_SORT);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 vector<Scalar>&,
+                                 vector<vector<Scalar> >&,
+                                 const vector<vector<Scalar> >& >::DO_NOT_SORT);
         #elif defined USE_ARRAY_OF_ARRAYS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, array<Scalar,NF>&, array<array<Scalar,NF>,NF>&, array<array<Scalar,NF>,NF>&>::DO_NOT_SORT);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 array<Scalar,NF>&,
+                                 array<array<Scalar,NF>,NF>&,
+                                 const array<array<Scalar,NF>,NF>&>::DO_NOT_SORT);
         #elif defined USE_C_FIXED_SIZE_ARRAYS
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar (*)[NF], Scalar (*)[NF]>::DO_NOT_SORT);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 Scalar*,
+                                 Scalar (*)[NF],
+                                 Scalar const (*)[NF]>::DO_NOT_SORT);
         #else
-        ecalc.Diagonalize(M, evals, evecs, Jacobi<Scalar, Scalar*, Scalar**, Scalar const*const*>::DO_NOT_SORT);
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 Scalar*,
+                                 Scalar**,
+                                 Scalar const*const*>::DO_NOT_SORT);
         #endif
 
       } //if (test_code_coverage)
