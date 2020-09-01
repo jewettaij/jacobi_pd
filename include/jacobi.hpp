@@ -530,7 +530,7 @@ template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 Jacobi(Jacobi<Scalar, Vector, Matrix, ConstMatrix>&& other) {
   Init();
-  swap(other);
+  this->swap(other);
 }
 
 // Using the "copy-swap" idiom for the assignment operator
