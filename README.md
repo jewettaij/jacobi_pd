@@ -11,7 +11,7 @@ jacobi_pd
 ## Description
 
 This repository contains a small C++
-[header file](include/jacobi.hpp)
+[header file](include/jacobi_pd.hpp)
 that implements the
 [Jacobi eigenvalue algorithm](https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm).
 It is [free of copyright](https://creativecommons.org/publicdomain/zero/1.0/).
@@ -46,7 +46,7 @@ No lines of code were borrowed or adapted from other sources.
 *Caveats:* The code in this repository does not run in parallel,
 and only works on dense square real symmetric matrices.
 However it is reasonably
-[short, simple](include/jacobi.hpp), 
+[short, simple](include/jacobi_pd.hpp), 
 [fast](benchmarks/README.md) and
 [reliable](.travis.yml).
 You can do anything you like with this code.
@@ -55,8 +55,8 @@ You can do anything you like with this code.
 ##  Example usage
 
 ```cpp
-#include "jacobi.hpp"
-using namespace jacobi_public_domain;
+#include "jacobi_pd.hpp"
+using namespace jacobi_pd;
 
 // ...
 

@@ -7,11 +7,12 @@
 #ifndef _JACOBI_HPP
 #define _JACOBI_HPP
 
+#include <algorithm>
 #include <cmath>
 #include <cassert>
 #include "matrix_alloc.hpp"
 
-namespace jacobi_public_domain {
+namespace jacobi_pd {
 
 using namespace matrix_alloc;
 

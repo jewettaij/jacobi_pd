@@ -11,7 +11,7 @@
 #include <vector>
 #include <array>
 #include "matrix_alloc.hpp"
-#include "jacobi.hpp"
+#include "jacobi_pd.hpp"
 
 using std::cout;
 using std::cerr;
@@ -20,7 +20,7 @@ using std::setprecision;
 using std::vector;
 using std::array;
 using namespace matrix_alloc;
-using namespace jacobi_public_domain;
+using namespace jacobi_pd;
 
 
 // This code works with various types of C++ matrices (for example,
