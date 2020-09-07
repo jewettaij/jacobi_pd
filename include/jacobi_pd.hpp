@@ -491,8 +491,10 @@ Alloc(int n) {
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
 Dealloc() {
-  if (max_idx_row)
+  if (max_idx_row) {
     delete [] max_idx_row;
+    max_idx_row = nullptr;
+  }
   Dealloc2D(&M);
   Init();
 }
