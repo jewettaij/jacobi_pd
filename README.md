@@ -81,7 +81,7 @@ Jacobi<double, double*, double**> eigen_calc(n);
 
 // Now, calculate the eigenvalues and eigenvectors of M
 
-eigen_calc.Diagonalize(M, evals, evects);  //(succeeded if return value is != 0)
+eigen_calc.Diagonalize(M, evals, evects);  //(successful if return value is != 0)
 ```
 
 ## Benchmarks
