@@ -9,12 +9,12 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cassert>
-#include "matrix_alloc.hpp"
+//#include <cassert>
+#include "matrix_alloc_jpd.hpp"
 
 namespace jacobi_pd {
 
-using namespace matrix_alloc;
+using namespace matrix_alloc_jpd;
 
 /// @class Jacobi
 /// @brief Calculate the eigenvalues and eigevectors of a symmetric matrix
@@ -63,8 +63,8 @@ public:
   /// @brief Calculate all the eigenvalues and eigevectors of a symmetric matrix
   ///        using the Jacobi eigenvalue algorithm:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
-  /// @returns The number_of_sweeps (= number_of_iterations / (n*(n-1)/2)).
-  ///          If this equals max_num_sweeps, the algorithm failed to converge.
+  /// @returns The number of Jacobi rotations attempted if successful (>0),
+  ///          and 0 otherwise.  (0 indicates that convergence failed.)
   /// @note  To reduce the computation time further, set calc_evecs=false.
   int
   Diagonalize(ConstMatrix mat, //!< the matrix you wish to diagonalize (size n)
@@ -163,7 +163,7 @@ Diagonalize(ConstMatrix mat,    // the matrix you wish to diagonalize (size n)
   // -- Iteration --
   int n_iters;
   int max_num_iters = max_num_sweeps*n*(n-1)/2; //"sweep" = n*(n-1)/2 iters
-  for (n_iters=0; n_iters < max_num_iters; n_iters++) {
+  for (n_iters=1; n_iters <= max_num_iters; n_iters++) {
     int i,j;
     MaxEntry(M, i, j); // Find the maximum entry in the matrix. Store in i,j
 
@@ -191,7 +191,11 @@ Diagonalize(ConstMatrix mat,    // the matrix you wish to diagonalize (size n)
   // Optional: Sort results by eigenvalue.
   SortRows(eval, evec, n, sort_criteria);
 
-  return n_iters / (n*(n-1)/2); //returns the number of "sweeps" (converged?)
+  if ((n_iters > max_num_iters) && (n>1))   // If we exceeded max_num_iters,
+    return 0;                               // indicate an error occured.
+
+  //assert(n_iters > 0);
+  return n_iters;
 }
 
 
@@ -223,7 +227,7 @@ CalcRot(Scalar const *const *M,    // matrix
         t = -t;
     }
   }
-  assert(std::abs(t) <= 1.0);
+  //assert(std::abs(t) <= 1.0);
   c = 1.0 / std::sqrt(1 + t*t);
   s = c*t;
 }
@@ -313,7 +317,7 @@ ApplyRot(Scalar **M,  // matrix
 
   //Update the off-diagonal elements of M which will change (above the diagonal)
 
-  assert(i < j);
+  //assert(i < j);
 
   M[i][j] = 0.0;
 
@@ -507,7 +511,7 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix, ConstMatrix>& source)
 {
   Init();
   SetSize(source.n);
-  assert(n == source.n);
+  //assert(n == source.n);
   // The following lines aren't really necessary, because the contents
   // of source.M and source.max_idx_row are not needed (since they are
   // overwritten every time Jacobi::Diagonalize() is invoked).

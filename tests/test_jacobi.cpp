@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <cassert>
 #include <iomanip>
 #include <cstdlib>
 #include <chrono>
@@ -10,7 +11,7 @@
 #include <algorithm>
 #include <vector>
 #include <array>
-#include "matrix_alloc.hpp"
+#include "matrix_alloc_jpd.hpp"
 #include "jacobi_pd.hpp"
 
 using std::cout;
@@ -19,7 +20,7 @@ using std::endl;
 using std::setprecision;
 using std::vector;
 using std::array;
-using namespace matrix_alloc;
+using namespace matrix_alloc_jpd;
 using namespace jacobi_pd;
 
 

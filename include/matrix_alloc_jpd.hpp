@@ -1,15 +1,16 @@
-/// @file    matrix_alloc.hpp
-/// @brief   Because I allocate 2-dimensional arrays frequently, I created a 
-///          few optional functions that make this more convenient.
+/// @file    matrix_alloc_jpd.hpp
+/// @brief   Short functions for allocating 2-dimensional C-style ** arrays.
+///          Perhaps it is useful to put this short code in a separate file 
+///          to make it independently of "jacobi_pd.hpp".
 /// @author  Andrew Jewett
 /// @license CC0-1.0
 
 #include<cassert>
 
-#ifndef _MATRIX_ALLOC_H
-#define _MATRIX_ALLOC_H
+#ifndef _MATRIX_ALLOC_JPD_H
+#define _MATRIX_ALLOC_JPD_H
 
-namespace matrix_alloc {
+namespace matrix_alloc_jpd {
 
 /// @brief  Allocate a 2-dimensional array.  (Uses row-major order.)
 template<typename Entry>
@@ -51,6 +52,6 @@ void Dealloc2D(Entry ***paaX)       // pointer to a 2D C-style array
   }
 }
 
-} // namespace matrix_alloc
+} // namespace matrix_alloc_jpd
 
-#endif //#ifndef _MATRIX_ALLOC_H
+#endif //#ifndef _MATRIX_ALLOC_JPD_H

@@ -16,6 +16,8 @@ matrix:
         - cd tests
         - g++ -g -O0 -coverage -fno-inline -fno-inline-small-functions -fno-default-inline -I../include -o test_jacobi test_jacobi.cpp
         - ./test_jacobi 5 1000 1e-03 1e+03 1 0  # ("0" tests for code-coverage)
+        # Edge case: Check if it runs without crashing on 1x1 matrices:
+        - ./test_jacobi 1 1 0.1 10.0
         #- cppcheck --quiet --error-exitcode=1
         # Now turn off code-coverage testing and try different size matrices.
         # Note: With such a huge spread of eigenvalue magnitudes(1e-09...1e+09),
@@ -63,6 +65,8 @@ matrix:
         - cd tests
         - clang++ -g -O0 -coverage -fno-inline -I../include -o test_jacobi test_jacobi.cpp
         - ./test_jacobi 5 1000 1e-03 1e+03 1 0  # ("0" tests for code-coverage)
+        # Edge case: Check if it runs without crashing on 1x1 matrices:
+        - ./test_jacobi 1 1 0.1 10.0
         #- cppcheck --quiet --error-exitcode=1
         # Now turn off code-coverage testing and try different size matrices.
         # Note: With such a huge spread of eigenvalue magnitudes(1e-09...1e+09),
