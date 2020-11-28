@@ -29,7 +29,7 @@ or any other C or C++ object which supports \[i\]\[j\] indexing.
 
 #### The main feature of this repository is it's [license](LICENSE.md).
 
-As of 2020, no simple *public domain* C++11 code
+As of late 2020, no simple public domain C++11 code
 yet exists for matrix diagonalization.
 Other C++ libraries such as Eigen or GSL are typically
 much larger and use more restrictive licenses.
