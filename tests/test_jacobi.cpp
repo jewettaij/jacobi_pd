@@ -539,6 +539,16 @@ void TestJacobi(int n, //<! matrix size
                                  Scalar*,
                                  Scalar**,
                                  Scalar const*const*>::SORT_INCREASING_ABS_EVALS);
+        // Also make sure the code considers a scenario where convergence fails:
+        ecalc.Diagonalize(M,
+                          evals,
+                          evecs,
+                          Jacobi<Scalar,
+                                 Scalar*,
+                                 Scalar**,
+                                 Scalar const*const*>::SORT_INCREASING_ABS_EVALS,
+                          true,
+                          0);   //<-- set the maximum allowed iterations to 0
         #endif
 
         for (int i = 1; i < n; i++)

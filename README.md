@@ -74,13 +74,14 @@ Jacobi<double, double*, double**> eigen_calc(n);
 
 // Note:
 // If the matrix you plan to diagonalize (M) is read-only, use this instead:
-// Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
-// If you prefer using vectors over C-style pointers, this works also:
-// Jacobi<double, vector<double>&, vector<vector<double>>&> eigen_calc(n);
+//   Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
+// If you prefer using C++ vectors over C-style pointers, this works also:
+//   Jacobi<double, vector<double>&, vector<vector<double>>&,
+//          const vector<vector<Scalar>>&>  eigen_calc(n);
 
 // Now, calculate the eigenvalues and eigenvectors of M
 
-eigen_calc.Diagonalize(M, evals, evects);
+eigen_calc.Diagonalize(M, evals, evects);  //(succeeded if return value is != 0)
 ```
 
 ## Benchmarks
