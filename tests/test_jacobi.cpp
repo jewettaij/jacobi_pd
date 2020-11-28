@@ -482,6 +482,12 @@ void TestJacobi(int n, //<! matrix size
 
 
     if (n_matrices == 1) {
+      cout << "Matrix:\n";
+      for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++)
+          cout << M[i][j] << " ";
+        cout << "\n";
+      }
       cout << "Eigenvalues (after sorting):\n";
       for (int i = 0; i < n; i++)
         cout << evals_known[i] << " ";

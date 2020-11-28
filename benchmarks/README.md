@@ -34,7 +34,7 @@ These times were measured on a single i5-4210U CPU core running at 1.70GHz.
 ## Code used
 ```
    cd tests/
-   sed -i .bak 's/double/float/' test_jacobi.cpp
+   sed -i 's/double/float/' test_jacobi.cpp
    g++ -DNDEBUG -Ofast -I../include -o test_jacobi test_jacobi.cpp
    for N in 2 3 4 5 10 20 50 100 200 500 1000; do
      time ./test_jacobi $N 10 0 1 0 10

@@ -106,6 +106,11 @@ This is a header-only library.
 for accuracy and memory safety
 over a wide range of array types, matrix sizes,
 eigenvalue magnitudes and degeneracies.
+**jacobi_pd** code is currently used in the popular 
+[LAMMPS](https://github.com/lammps/lammps/pull/2347)
+and
+[colvars](https://github.com/Colvars/colvars/pull/360)
+MD simulation tools.
 
 
 ## Requirements
