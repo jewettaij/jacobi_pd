@@ -64,9 +64,9 @@ double **M;      // A symmetric n x n matrix you want to diagonalize
 double *evals;   // Store the eigenvalues here.
 double **evecs;  // Store the eigenvectors here.
 // Allocate space for M, evals, and evecs (omitted)...
-M[0][0] = 2.0; M[0][1] = 1.0; M[0][2] = 1.0;  //Note: The matrix
-M[1][0] = 1.0; M[1][1] = 2.0; M[1][2] =-1.0;  //must be symmetric
-M[2][0] = 1.0; M[2][1] =-1.0; M[2][2] = 2.0;
+M[0][0] = 2.0; M[0][1] = 1.0; M[0][2] = 1.0;
+M[1][0] = 1.0; M[1][1] = 2.0; M[1][2] =-1.0;  //Note: The matrix
+M[2][0] = 1.0; M[2][1] =-1.0; M[2][2] = 2.0;  //must be symmetric.
 
 // Now create an instance of Jacobi ("eigen_calc").  This will allocate space
 // for storing intermediate calculations.  Once created, it can be reused
