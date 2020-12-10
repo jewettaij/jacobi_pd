@@ -104,7 +104,7 @@ private:
   /// @brief Find the indices (i_max, j_max) marking the location of the
   ///        entry in the matrix with the largest absolute value.  This
   ///        uses the max_idx_row[] array to find the answer in O(n) time.
-  /// @returns This function does not return a avalue.  However after it is
+  /// @returns This function does not return a value.  However after it is
   ///          invoked, the location of the largest matrix element will be
   ///          stored in the i_max and j_max arguments.
   void MaxEntry(Scalar const *const *M, int& i_max, int& j_max) const;
