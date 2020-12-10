@@ -88,12 +88,12 @@ eigen_calc.Diagonalize(M, evals, evecs);  //(successful if return value is != 0)
 std::cout << "eigenvalues:  ";
 for (int i=0; i < n; i++)
   cout << evals[i] << " ";
-cout << endl;;
+cout << endl;
 for (int i=0; i < n; i++) {
   cout << "eigenvector" <<i+1<< ": ";
   for (int j=0; j < n; j++)
     cout << evecs[i][j] << " ";
-  cout << endl;;
+  cout << endl;
 }
 ```
 
