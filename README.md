@@ -85,6 +85,9 @@ Jacobi<double, double*, double**> eigen_calc(n);
 
 eigen_calc.Diagonalize(M, evals, evecs);  //(successful if return value is != 0)
 
+// For efficiency, you can re-use "eigen_calc" class instance on different
+// matrices (instead of creating a new Jacobi class instance each time).
+
 std::cout << "eigenvalues:  ";
 for (int i=0; i < n; i++)
   cout << evals[i] << " ";
