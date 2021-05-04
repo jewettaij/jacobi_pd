@@ -68,9 +68,7 @@ M[0][0] = 2.0; M[0][1] = 1.0; M[0][2] = 1.0;
 M[1][0] = 1.0; M[1][1] = 2.0; M[1][2] =-1.0;  //Note: The matrix
 M[2][0] = 1.0; M[2][1] =-1.0; M[2][2] = 2.0;  //must be symmetric.
 
-// Now create an instance of Jacobi ("eigen_calc").  This will allocate space
-// for storing intermediate calculations.  Once created, it can be reused
-// multiple times without incurring the cost of allocating memory on the heap.
+// Now create an instance of Jacobi ("eigen_calc").
 
 Jacobi<double, double*, double**> eigen_calc(n);
 
@@ -85,8 +83,8 @@ Jacobi<double, double*, double**> eigen_calc(n);
 
 eigen_calc.Diagonalize(M, evals, evecs);  //(successful if return value is != 0)
 
-// For efficiency, you can re-use "eigen_calc" class instance on different
-// matrices (instead of creating a new Jacobi class instance each time).
+// If you have many matrices to diagonalize, you can re-use "eigen_calc". (This
+// is more efficient than creating a new "Jacobi" class instance for each use.)
 
 std::cout << "eigenvalues:  ";
 for (int i=0; i < n; i++)
