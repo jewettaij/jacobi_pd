@@ -63,8 +63,8 @@ public:
   /// @brief Calculate all the eigenvalues and eigevectors of a symmetric matrix
   ///        using the Jacobi eigenvalue algorithm:
   ///        https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
-  /// @returns The number of Jacobi rotations attempted if successful (>0),
-  ///          and 0 otherwise.  (0 indicates that convergence failed.)
+  /// @returns The number of Jacobi iterations attempted, which should be > 0.
+  ///          If the return value is not strictly > 0 then convergence failed.
   /// @note  To reduce the computation time further, set calc_evecs=false.
   int
   Diagonalize(ConstMatrix mat, //!< the matrix you wish to diagonalize (size n)
@@ -170,7 +170,7 @@ Diagonalize(ConstMatrix mat,    // the matrix you wish to diagonalize (size n)
     // If M[i][j] is small compared to M[i][i] and M[j][j], set it to 0.
     if ((M[i][i] + M[i][j] == M[i][i]) && (M[j][j] + M[i][j] == M[j][j])) {
       M[i][j] = 0.0;
-      max_idx_row[i] = MaxEntryRow(M,i); //must also update max_idx_row[i]
+      max_idx_row[i] = MaxEntryRow(M,i); //update max_idx_row[i]
     }
 
     if (M[i][j] == 0.0)

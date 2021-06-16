@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/jewettaij/jacobi_pd.svg?branch=master)](https://travis-ci.org/jewettaij/jacobi_pd.svg?branch=master)
+[![Build Status](https://travis-ci.com/jewettaij/jacobi_pd.svg?branch=master)](https://travis-ci.com/jewettaij/jacobi_pd.svg?branch=master)
 [![codecov](https://codecov.io/gh/jewettaij/jacobi_pd/branch/master/graph/badge.svg)](https://codecov.io/gh/jewettaij/jacobi_pd)
 [![C++11](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://isocpp.org/std/the-standard)
 [![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/jewettaij/jacobi_pd)]()
@@ -81,7 +81,7 @@ Jacobi<double, double*, double**> eigen_calc(n);
 
 // Now, calculate the eigenvalues and eigenvectors of M
 
-eigen_calc.Diagonalize(M, evals, evecs);  //(successful if return value is != 0)
+eigen_calc.Diagonalize(M, evals, evecs);  //(successful if return value is > 0)
 
 // If you have many matrices to diagonalize, you can re-use "eigen_calc". (This
 // is more efficient than creating a new "Jacobi" class instance for each use.)
