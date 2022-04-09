@@ -1,7 +1,7 @@
 /// @file    matrix_alloc_jpd.hpp
-/// @brief   Short functions for allocating 2-dimensional C-style ** arrays.
-///          Perhaps it is useful to put this short code in a separate file 
-///          to make it independently of "jacobi_pd.hpp".
+/// @brief   Simple functions for allocating 2-dimensional C-style ** arrays in
+///          contiguous memory. Perhaps it is useful to put this short code in a
+///          separate file to make it available independently of "jacobi_pd.hpp"
 /// @author  Andrew Jewett
 /// @license CC0-1.0
 
