@@ -79,7 +79,7 @@ Jacobi<double, double*, double**> eigen_calc(n);
 //   Jacobi<double, double*, double**, double const*const*> eigen_calc(n);
 // If you prefer using C++ vectors over C-style pointers, this works also:
 //   Jacobi<double, vector<double>&, vector<vector<double>>&,
-//          const vector<vector<Scalar>>&>  eigen_calc(n);
+//          const vector<vector<double>>&>  eigen_calc(n);
 
 // Now, calculate the eigenvalues and eigenvectors of M
 
