@@ -4,8 +4,8 @@
 /// @author   Andrew Jewett
 /// @license  CC0-1.0
 
-#ifndef _JACOBI_HPP
-#define _JACOBI_HPP
+#ifndef _JACOBI_PD_HPP
+#define _JACOBI_PD_HPP
 
 #include <algorithm>
 #include <cmath>
@@ -556,5 +556,5 @@ operator = (Jacobi<Scalar, Vector, Matrix, ConstMatrix> source) {
 } // namespace jacobi
 
 
-#endif //#ifndef _JACOBI_HPP
+#endif //#ifndef _JACOBI_PD_HPP
 
