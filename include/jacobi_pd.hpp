@@ -125,7 +125,7 @@ public:
   // memory management: copy and move constructor, swap, and assignment operator
   Jacobi(const Jacobi<Scalar, Vector, Matrix, ConstMatrix>& source);
   Jacobi(Jacobi<Scalar, Vector, Matrix, ConstMatrix>&& other);
-  void swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other);
+  void swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other) noexcept;
   Jacobi<Scalar, Vector, Matrix, ConstMatrix>& operator = (Jacobi<Scalar, Vector, Matrix, ConstMatrix> source);
 
 }; // class Jacobi
@@ -526,7 +526,7 @@ Jacobi(const Jacobi<Scalar, Vector, Matrix, ConstMatrix>& source)
 
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 void Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
-swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other) {
+swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other) noexcept {
   std::swap(n, other.n);
   std::swap(max_idx_row, other.max_idx_row);
   std::swap(M, other.M);
@@ -535,12 +535,16 @@ swap(Jacobi<Scalar, Vector, Matrix, ConstMatrix> &other) {
 // Move constructor (C++11)
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
-Jacobi(Jacobi<Scalar, Vector, Matrix, ConstMatrix>&& other) {
-  Init();
+Jacobi(Jacobi<Scalar, Vector, Matrix, ConstMatrix>&& other)
+  : Jacobi()  // delegate to the default constructor (which invokes Init())
+{
   this->swap(other);
 }
 
 // Using the "copy-swap" idiom for the assignment operator
+// The assignment operator below implements both copy and move assignments.
+// It accepts its argument by value, which invokes the appropriate
+// (copy or move) constructor.
 template<typename Scalar,typename Vector,typename Matrix,typename ConstMatrix>
 Jacobi<Scalar, Vector, Matrix, ConstMatrix>&
 Jacobi<Scalar, Vector, Matrix, ConstMatrix>::
