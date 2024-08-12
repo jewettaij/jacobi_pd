@@ -1,3 +1,4 @@
+[![CircleCI](https://img.shields.io/circleci/build/github/jewettaij/jacobi_pd/master)](https://circleci.com/gh/jewettaij/jacobi_pd)
 [![Build Status](https://travis-ci.com/jewettaij/jacobi_pd.svg?branch=master)](https://travis-ci.com/jewettaij/jacobi_pd.svg?branch=master)
 [![codecov](https://codecov.io/gh/jewettaij/jacobi_pd/branch/master/graph/badge.svg)](https://codecov.io/gh/jewettaij/jacobi_pd)
 [![CodeQL](https://github.com/jewettaij/jacobi_pd/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/jewettaij/jacobi_pd/actions/workflows/codeql-analysis.yml)

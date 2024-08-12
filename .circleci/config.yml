@@ -1,0 +1,70 @@
+version: 2.1
+
+jobs:
+  linux-build-and-test:
+    docker:
+      - image: "cimg/base:stable-20.04"
+    steps:
+      - checkout
+      - run:
+          name: Installing SUDO
+          command: 'sudo apt-get update && sudo apt-get install -y && sudo rm -rf /var/lib/apt/lists/*'
+      - run:
+          name: Installing git
+          command: 'sudo apt-get update && sudo apt-get install -y git'
+      #- run:
+      #    name: Install CMAKE
+      #    command: 'sudo apt-get update && sudo apt-get install -y cmake'
+      - run:
+          name: Install MAKE
+          command: 'sudo apt-get update && sudo apt-get install -y make'
+      #- run:
+      #    name: Installing GCC
+      #    command: 'sudo apt-get update && sudo apt-get install -y g++'
+      #- run:
+      #    name: Installing CLANG
+      #    command: 'sudo apt-get update && sudo apt-get install -y clang'
+      - run:
+          name: Build
+          command: |
+            cd tests
+            g++ -g -O0 -coverage -fno-inline -fno-inline-small-functions -fno-default-inline -I../include -o test_jacobi test_jacobi.cpp
+      - run:
+          name: Test
+            #- cppcheck --quiet --error-exitcode=1
+            # Now turn off code-coverage testing and try different size matrices.
+            # Note: With such a huge spread of eigenvalue magnitudes(1e-09...1e+09),
+            # some of the smaller eigenvalues (and their corresponding eigenvectors)
+            # will be calculated incorrectly due to numeric underflow.  The test
+            # will not fail in these cases even though eigenvalues do not match.
+	    # Only errors which are within machine precision of the largest
+            # eigenvalue are considered important and will cause the test to fail.
+            g++ -g -I../include -o test_jacobi test_jacobi.cpp
+            ./test_jacobi 2 1000 0.1 10
+            ./test_jacobi 5 1000 0.01 100.0
+            ./test_jacobi 20 100 1e-05 1e+05
+            ./test_jacobi 50  10 1e-09 1e+09
+            #- now test again with degenerate eigenvalues
+            ./test_jacobi 2 1000 0.1 10 2
+            ./test_jacobi 5 1000 0.01 100.0 2
+            ./test_jacobi 20 100 1e-05 1e+05 5
+            ./test_jacobi 50  10 1e-09 1e+09 10
+            #- now use valgrind to find memory leaks and other errors:
+            g++ -g -O0 -I../include -o test_jacobi test_jacobi.cpp
+            valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-04 1e+04
+            #- now test again using vector<vector<double>> instead of double **
+            g++ -g -O0 -DUSE_VECTOR_OF_VECTORS -I../include -o test_jacobi test_jacobi.cpp
+            valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-04 1e+04
+            #- now test again using array<array<double,5>,5>
+            g++ -g -O0 -DUSE_ARRAY_OF_ARRAYS -I../include -o test_jacobi test_jacobi.cpp
+            valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-04 1e+04
+            #- now test again using double (*)[5]
+            g++ -g -O0 -DUSE_C_FIXED_SIZE_ARRAYS -I../include -o test_jacobi test_jacobi.cpp
+            valgrind --leak-check=yes --error-exitcode=1 ./test_jacobi 5 10 1e-04 1e+04
+            bash <(curl -s https://codecov.io/bash)
+            cd ../
+
+workflows:
+  main:
+    jobs:
+      - linux-build-and-test
