@@ -37,7 +37,7 @@ jobs:
             # some of the smaller eigenvalues (and their corresponding eigenvectors)
             # will be calculated incorrectly due to numeric underflow.  The test
             # will not fail in these cases even though eigenvalues do not match.
-	    # Only errors which are within machine precision of the largest
+            # Only errors which are within machine precision of the largest
             # eigenvalue are considered important and will cause the test to fail.
             g++ -g -I../include -o test_jacobi test_jacobi.cpp
             ./test_jacobi 2 1000 0.1 10
