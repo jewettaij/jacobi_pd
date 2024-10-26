@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   linux-build-and-test:
     docker:
-      - image: "cimg/base:stable-22.04"
+      - image: "cimg/base:stable-20.04"
     steps:
       - checkout
       - run:
