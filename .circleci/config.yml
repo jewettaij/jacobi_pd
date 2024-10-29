@@ -2,8 +2,8 @@ version: 2.1
 
 jobs:
   linux-build-and-test:
-    docker:
-      - image: "cimg/base:stable-20.04"
+    machine:
+      image: ubuntu-2404:current
     steps:
       - checkout
       - run:
@@ -12,9 +12,9 @@ jobs:
       - run:
           name: Installing GCC
           command: 'sudo apt-get update && sudo apt-get install -y g++'
-      #- run:
-      #    name: Installing CLANG
-      #    command: 'sudo apt-get update && sudo apt-get install -y clang'
+      - run:
+          name: Installing valgrind
+          command: 'sudo apt-get update && sudo apt-get install -y valgrind'
       - run:
           name: Build
           command: |
