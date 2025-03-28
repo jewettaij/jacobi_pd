@@ -57,7 +57,6 @@ You can do anything you like with this code.
 
 ```cpp
 #include "jacobi_pd.hpp"
-using namespace jacobi_pd;
 
 // ...
 int n = 3;       // Matrix size
@@ -71,7 +70,7 @@ M[2][0] = 1.0; M[2][1] =-1.0; M[2][2] = 2.0;  //must be symmetric.
 
 // Now create an instance of Jacobi ("eigen_calc").
 
-Jacobi<double, double*, double**> eigen_calc(n);
+jacobi_pd::Jacobi<double, double*, double**> eigen_calc(n);
 
 // Note:
 // If the matrix you plan to diagonalize (M) is read-only, use this instead:

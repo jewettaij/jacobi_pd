@@ -15,3 +15,5 @@ venv
 # text-editor temporary files:
 *~
 
+# VSCode
+.vscode
